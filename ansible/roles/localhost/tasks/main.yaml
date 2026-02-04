@@ -1,0 +1,43 @@
+- name: Replace server address in kubeconfig
+  replace:
+    path: ./k3s.yaml
+    regexp: 'https://127\.0\.0\.1:6443'
+    replace: "https://{{ hostvars[groups['master'][0]]['ansible_ssh_host'] }}:6443"
+  tags: fetch_kubeconfig
+
+- name: Replace default in kubeconfig
+  replace:
+    path: ./k3s.yaml
+    regexp: 'default'
+    replace: 'rpi'
+
+- name: Ensure .kube directory exists
+  file:
+    path: ~/.kube
+    state: directory
+    mode: '0700'
+
+- name: Backup existing kubeconfig if it exists
+  shell: cp ~/.kube/config ~/.kube/config.backup_$(date +%Y%m%d%H%M%S)
+  args:
+    executable: /bin/bash
+  register: backup_result
+#
+- name: Merge kubeconfig files
+  shell: |
+    kubectl konfig import -s ./k3s.yaml
+  args:
+    executable: /bin/bash
+  tags: merge_kubeconfig
+#
+#- name: Set permissions on kubeconfig
+#  file:
+#    path: ~/.kube/config
+#    mode: '0600'
+#  tags: merge_kubeconfig
+#
+#- name: Verify kubeconfig
+#  shell: kubectl config get-contexts
+#  args:
+#    executable: /bin/bash
+#  tags: merge_kubeconfig

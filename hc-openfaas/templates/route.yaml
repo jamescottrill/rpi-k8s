@@ -1,0 +1,18 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: openfaas-route-internal
+  namespace: {{ .Release.Namespace }}
+spec:
+  parentRefs:
+    - name: {{ .Values.gateway.name }}
+      namespace: {{ .Values.gateway.namespace }}
+      sectionName: websecure
+  hostnames:
+    - functions.home.internal
+    - functions.home.dev
+  rules:
+    - backendRefs:
+        - name: gateway
+          port: 8080

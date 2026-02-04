@@ -1,0 +1,10 @@
+metallb:
+  prometheus:
+    serviceAccount: hc-monitoring-kube-prometh-prometheus
+    namespace: monitoring
+    podMonitor:
+      enabled: true
+  speaker:
+    frr:
+      enabled: false
+addressPool: 192.168.0.240-192.168.0.245

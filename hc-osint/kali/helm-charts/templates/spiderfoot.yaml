@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kali
+  labels:
+    app: kali
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+          app: kali
+    template:
+        metadata:
+          labels:
+              app: kali
+        spec:
+          serviceAccountName: {{ .Values.serviceAccount.name }}
+          containers:
+          - name: kali
+            image: "docker.home.internal/kali:latest"
+            imagePullPolicy: Always
+            env:
+            - name: VNCEXPOSE
+              value: "1"
+            - name: VNC_PASSWORD
+              value: "REJP%v5dZA"
+            ports:
+            - containerPort: 5001
+            volumeMounts:
+            - name: kali-data
+              mountPath: /kali/data
+          volumes:
+          - name: kali-data
+            emptyDir: {}

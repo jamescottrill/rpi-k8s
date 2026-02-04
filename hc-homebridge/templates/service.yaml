@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: homebridge-web
+  namespace: homebridge
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8581
+      targetPort: 8581
+  selector:
+    app: homebridge
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homebridge-homekit
+  namespace: homebridge
+  annotations:
+    metallb.io/loadBalancerIPs: 192.168.0.241
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 51827
+      targetPort: 51827
+      name: bridge
+    - port: 51807
+      targetPort: 51807
+      name: config-port
+    - port: 43776
+      targetPort: 43776
+      name: child-bridge-1
+    - port: 8581
+      targetPort: 8581
+      name: web-ui
+    - name: mdns
+      port: 5353
+      targetPort: 5353
+      protocol: UDP
+  selector:
+    app: homebridge

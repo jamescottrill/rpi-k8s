@@ -1,0 +1,1 @@
+disable_components: 'servicelb,traefik'

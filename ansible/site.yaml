@@ -1,0 +1,77 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+    - vars.yml
+  roles:
+    - role: common
+      tags: common
+
+
+- hosts: master
+  become: yes
+  vars_files:
+  - vars.yml
+  roles:
+    - role: master
+      tags: k3s
+
+- hosts: k3snodes
+  become: yes
+  vars_files:
+    - vars.yml
+  roles:
+    - role: worker
+      tags: k3s
+
+#- name: Fetch kubeconfig file from master node
+#  hosts: master
+#  become: yes
+#  gather_facts: no
+#  tasks:
+#    - name: Fetch kubeconfig file to local machine
+#      fetch:
+#        src: /etc/rancher/k3s/k3s.yaml
+#        dest: ./k3s.yaml
+#        flat: yes
+#      tags: fetch_kubeconfig
+
+- name: Localhost Tasks
+  hosts: localhost
+  gather_facts: no
+  roles:
+    - name: localhost 
+      tags: fetch_kubeconfig
+#
+#- name: Delete registries.yaml file
+#  hosts: all
+#  become: yes
+#  tasks:
+#    - name: Delete registries.yaml file
+#      file:
+#        name: /etc/rancher/k3s/registries.yaml
+#        state: absent
+#      tags: delete-registrieskub
+
+
+- name: Restart k3s on master node
+  hosts: master
+  become: yes
+  tasks:
+    - name: Restart k3s
+      systemd:
+        name: k3s
+        state: restarted
+      tags: k3s-restart
+
+- name: Restart k3s on worker nodes
+  hosts: k3snodes
+  become: yes
+  tasks:
+    - name: Restart k3s
+      systemd:
+        name: k3s-agent
+        state: restarted
+      tags: k3s-restart
+
+

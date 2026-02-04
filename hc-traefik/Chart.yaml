@@ -1,0 +1,7 @@
+apiVersion: v2
+name: hc-traefik
+version: 0.1.0
+dependencies:
+    - name: traefik
+      version: 38.0.1
+      repository: https://traefik.github.io/charts

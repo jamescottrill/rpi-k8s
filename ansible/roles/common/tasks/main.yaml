@@ -1,0 +1,38 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - apt-transport-https
+      - ca-certificates
+      - software-properties-common
+      - watchdog
+    state: present
+    update_cache: yes
+- name: update systemd conf
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/system.conf
+    regexp: ^RuntimeWatchdogSec=
+    line: RuntimeWatchdogSec=15
+- name: update systemd conf
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/system.conf
+    regexp: ^RuntimeWatchdogSec=
+    line: RebootWatchdogSec=2min
+- name: system reload
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+- name: Make k3s directory
+  file:
+    path: /etc/rancher/k3s
+    state: directory
+    mode: '0755'
+
+- name: Create registries.yaml file
+  template:
+    src: templates/registries.yaml.j2
+    dest: /etc/rancher/k3s/registries.yaml
+  tags: registries

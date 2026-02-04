@@ -1,0 +1,25 @@
+all:
+    hosts:
+        rpi1:
+            ansible_ssh_host: 192.168.0.100
+        rpi2:
+            ansible_ssh_host: 192.168.0.101
+        rpi3:
+            ansible_ssh_host: 192.168.0.102
+        rpi4:
+            ansible_ssh_host: 192.168.0.103
+        rpi5:
+            ansible_ssh_host: 192.168.0.104
+    vars:
+        ansible_user: james
+        ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+master:
+    hosts:
+        rpi1:
+
+k3snodes:
+    hosts:
+        rpi2:
+        rpi3:
+        rpi4:
+        rpi5:

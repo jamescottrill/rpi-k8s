@@ -1,0 +1,18 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: homebridge-route-internal
+  namespace: {{ .Release.Namespace }}
+spec:
+  parentRefs:
+    - name: {{ .Values.gateway.name }}
+      namespace: {{ .Values.gateway.namespace }}
+      sectionName: websecure
+  hostnames:
+    - homebridge.home.internal
+    - homebridge.home.dev
+  rules:
+    - backendRefs:
+        - name: homebridge-web
+          port: 8581

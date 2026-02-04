@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-home-dev
+  namespace: kube-system
+spec:
+  secretName: wildcard-home-dev-tls
+  duration: 8760h
+  renewBefore: 720h
+  dnsNames:
+    - "*.home.dev"
+    - "home.dev"
+  issuerRef:
+    name: home-dev-ca-issuer
+    kind: ClusterIssuer

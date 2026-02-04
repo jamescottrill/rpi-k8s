@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docker-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: docker-registry
+  template:
+    metadata:
+      labels:
+        app: docker-registry
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name}}
+      containers:
+        - name: registry
+          image: registry:2
+          env:
+            - name: REGISTRY_AUTH
+              value: htpasswd
+            - name: REGISTRY_AUTH_HTPASSWD_REALM
+              value: Registry Realm
+            - name: REGISTRY_AUTH_HTPASSWD_PATH
+              value: /opt/docker-registry/auth/htpasswd
+          ports:
+            - containerPort: 5000
+              name: registry
+          volumeMounts:
+            - name: registry-storage
+              mountPath: /var/lib/registry
+            - name: docker-registry-auth
+              mountPath: /opt/docker-registry/auth
+            - name: docker-registry-cert
+              mountPath: /opt/docker-registry/certs
+
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1"
+      volumes:
+        - name: registry-storage
+          persistentVolumeClaim:
+            claimName: docker-registry-pvc
+        - name: docker-registry-auth
+          secret:
+            secretName: docker-registry
+        - name: docker-registry-cert
+          secret:
+            secretName: docker-certs

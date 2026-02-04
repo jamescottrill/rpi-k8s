@@ -1,0 +1,7 @@
+gateway:
+  name: traefik-gateway
+  namespace: kube-system
+serviceAccount:
+  name: sa-pihole
+nodeSelector:
+  network: ethernet

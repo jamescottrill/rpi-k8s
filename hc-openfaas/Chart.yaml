@@ -1,0 +1,7 @@
+name: hc-openfaas
+apiVersion: v2
+version: 0.1.0
+dependencies:
+  - name: openfaas
+    version: 14.2.91
+    repository: https://openfaas.github.io/faas-netes/

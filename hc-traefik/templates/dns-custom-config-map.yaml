@@ -1,0 +1,19 @@
+{{/*apiVersion: v1*/}}
+{{/*kind: ConfigMap*/}}
+{{/*metadata:*/}}
+{{/*  name: coredns-custom*/}}
+{{/*  namespace: kube-system*/}}
+{{/*data:*/}}
+{{/*  custom.server: |*/}}
+{{/*    home.internal:53 {*/}}
+{{/*      forward . 192.168.0.191*/}}
+{{/*    }*/}}
+{{/*    kn.internal:53 {*/}}
+{{/*      forward . 192.168.0.191*/}}
+{{/*    }*/}}
+{{/*    home.local:53 {*/}}
+{{/*      forward . 192.168.0.191*/}}
+{{/*    }*/}}
+{{/*    kn.local:53 {*/}}
+{{/*      forward . 192.168.0.191*/}}
+{{/*    }*/}}

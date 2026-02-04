@@ -1,0 +1,7 @@
+apiVersion: v2
+name: hc-monitoring
+version: 0.1.0
+dependencies:
+  - name: kube-prometheus-stack
+    version: 67.5.0
+    repository: https://prometheus-community.github.io/helm-charts

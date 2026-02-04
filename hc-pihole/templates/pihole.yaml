@@ -1,0 +1,51 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pihole
+  labels:
+    app: pihole
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+          app: pihole
+    template:
+        metadata:
+            labels:
+                app: pihole
+        spec:
+          serviceAccountName: {{ .Values.serviceAccount.name }}
+          nodeSelector:
+            network: ethernet
+            kubernetes.io/hostname: rpi3
+          dnsPolicy: ClusterFirstWithHostNet
+          containers:
+          - name: pihole
+            image: pihole/pihole:latest
+            imagePullPolicy: Always
+            ports:
+              - containerPort: 80
+                name: http
+                protocol: TCP
+              - containerPort: 443
+                name: https
+                protocol: TCP
+              - name: dns-tcp
+                containerPort: 53
+                protocol: TCP
+              - name: dns-udp
+                containerPort: 53
+                protocol: UDP
+            volumeMounts:
+              - name: pihole-etc
+                mountPath: /etc/pihole
+              - name: pihole-dnsmasq
+                mountPath: /etc/dnsmasq.d
+          volumes:
+            - name: pihole-etc
+              persistentVolumeClaim:
+                claimName: pihole-etc
+            - name: pihole-dnsmasq
+              persistentVolumeClaim:
+                claimName: pihole-dnsmasq

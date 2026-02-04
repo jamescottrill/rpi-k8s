@@ -1,0 +1,13 @@
+kube-prometheus-stack:
+  grafana:
+    enabled: true
+    route:
+      main:
+        enabled: true
+        parentRefs:
+          - name: traefik-gateway
+            namespace: kube-system
+            sectionName: websecure
+        hostnames:
+          - grafana.home.internal
+          - grafana.home.dev

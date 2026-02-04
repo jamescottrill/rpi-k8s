@@ -1,0 +1,30 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spiderfoot
+  labels:
+    app: spiderfoot
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+          app: spiderfoot
+    template:
+        metadata:
+          labels:
+              app: spiderfoot
+        spec:
+          serviceAccountName: {{ .Values.serviceAccount.name }}
+          containers:
+          - name: spiderfoot
+            image: "docker.home.dev/spiderfoot:latest"
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 5001
+            volumeMounts:
+            - name: spiderfoot-data
+              mountPath: /spiderfoot/data
+          volumes:
+          - name: spiderfoot-data
+            emptyDir: {}

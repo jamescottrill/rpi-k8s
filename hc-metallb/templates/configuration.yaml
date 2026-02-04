@@ -1,0 +1,30 @@
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: internal-advertisement
+  namespace: {{ .Release.Namespace }}
+spec:
+  ipAddressPools:
+    - address-pool
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: pihole-l2
+  namespace: {{ .Release.Namespace }}
+spec:
+  ipAddressPools:
+    - address-pool
+  nodeSelectors:
+    - matchLabels:
+        kubernetes.io/hostname: rpi3
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: address-pool
+  namespace: {{ .Release.Namespace }}
+spec:
+  addresses:
+    - {{ .Values.addressPool }}

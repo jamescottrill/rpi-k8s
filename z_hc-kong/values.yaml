@@ -1,0 +1,5 @@
+kong:
+  gateway:
+    api:
+      enabled: true
+      type: LoadBalancer

@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kdb-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kdb
+  template:
+    metadata:
+      labels:
+        app: kdb
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      containers:
+        - name: kdb
+          image: docker.home.dev/kdb-insights-core:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          # If you need persistent storage, add volume mounts and PVCs here
+          volumeMounts:
+            - mountPath: /opt/kdb/data
+              name: kdb-storage
+            - mountPath: /tmp/qlic/kc.lic
+              subPath: kc.lic
+              name: kdb-license-volume
+              readOnly: true
+          # Env vars (if needed) can go here
+          # resources:
+          #   requests:
+          #     cpu: "100m"
+          #     memory: "256Mi"
+          #   limits:
+          #     cpu: "1"
+          #     memory: "1Gi"
+      volumes:
+        - name: kdb-storage
+          persistentVolumeClaim:
+            claimName: kdb-pvc
+        - name: kdb-license-volume
+          secret:
+            secretName: kdb-license
+            items:
+              - key: kc.lic
+                path: kc.lic

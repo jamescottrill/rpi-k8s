@@ -1,0 +1,75 @@
+traefik:
+  providers:
+    kubernetesIngress:
+      enabled: false
+    kubernetesGateway:
+      enabled: true
+      experimentalChannel: true
+  gateway:
+    listeners:
+      web:
+        namespacePolicy:
+          from: All
+        port: 80
+      websecure:
+        namespacePolicy:
+          from: All
+        port: 443
+        protocol: HTTPS
+        certificateRefs:
+          - name: wildcard-home-dev-tls
+            namespace: kube-system
+      dns-tcp:
+        namespacePolicy:
+          from: All
+        port: 53
+        protocol: TCP
+        allowedRoutes:
+          kinds:
+            - kind: TCPRoute
+#      dns-udp:
+#        namespacePolicy: All
+#        port: 53
+#        protocol: UDP
+#        allowedRoutes:
+#          kinds:
+#            - kind: UDPRoute
+#      dns-udp:
+#        namespacePolicy: All
+#        port: 53
+#        protocol: UDP
+#        allowedRoutes:
+#          kinds:
+#            - kind: UDPRoute
+
+  ports:
+    web:
+      port: 80
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+      observability:
+        accessLogs: false
+        metrics: false
+        tracing: false
+    websecure:
+      port: 443
+      tls:
+        domains:
+          - dev: home.dev
+          - internal: home.internal
+      observability:
+        accessLogs: true
+        metrics: true
+        tracing: true
+        traceVerbosity: detailed
+    dns-tcp:
+      port: 53
+#    dns-udp:
+#      port: 53
+
+gateway:
+  name: traefik-gateway
+  namespace: kube-system
