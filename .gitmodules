@@ -1,0 +1,3 @@
+[submodule "auto_bug_bounty"]
+	path = auto_bug_bounty
+	url = git@github.com:slatedata/auto_bug_bounty.git

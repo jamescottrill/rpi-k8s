@@ -1,0 +1,237 @@
+---
+- name: Gather facts from all nodes
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+- name: Retrieve k3s node token from master
+  hosts: master
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Retrieve k3s node token
+      shell: cat /var/lib/rancher/k3s/server/node-token
+      register: node_token
+      changed_when: false
+
+    - name: Set fact for node token
+      set_fact:
+        k3s_token: "{{ node_token.stdout }}"
+
+- name: Upgrade master node
+  hosts: master
+  become: yes
+  gather_facts: no
+  vars:
+    k3s_target_version: "v1.34.3+k3s1"
+    target_debian_release: "trixie"
+    disable_components: "servicelb,traefik"
+  tasks:
+    - name: Check current k3s version
+      shell: k3s --version | awk '{print $3}'
+      register: current_k3s_version
+      changed_when: false
+
+    - name: Set upgrade flags
+      set_fact:
+        needs_k3s_upgrade: "{{ current_k3s_version.stdout != k3s_target_version }}"
+        needs_debian_upgrade: "{{ ansible_distribution_release != target_debian_release }}"
+
+    - name: Drain master node
+      shell: kubectl drain {{ inventory_hostname }} --ignore-daemonsets --delete-emptydir-data --timeout=120s
+      when: needs_k3s_upgrade or needs_debian_upgrade
+
+    - name: Download k3s install script
+      get_url:
+        url: https://get.k3s.io
+        dest: /tmp/k3s_install.sh
+        mode: '0755'
+      when: needs_k3s_upgrade
+
+    - name: Upgrade k3s on master node
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_target_version }}"
+        INSTALL_K3S_EXEC: "--disable {{ disable_components }}"
+        K3S_KUBECONFIG_MODE: "644"
+      shell: /tmp/k3s_install.sh
+      when: needs_k3s_upgrade
+
+    - name: Wait for k3s service to be active
+      systemd:
+        name: k3s
+        state: started
+      when: needs_k3s_upgrade
+
+    - name: Wait for k3s API to be ready
+      shell: kubectl get nodes
+      register: api_check
+      retries: 30
+      delay: 10
+      until: api_check.rc == 0
+      changed_when: false
+      when: needs_k3s_upgrade
+
+    - name: Update sources.list from bookworm to trixie
+      replace:
+        path: /etc/apt/sources.list
+        regexp: 'bookworm'
+        replace: 'trixie'
+      when: needs_debian_upgrade
+
+    - name: Update sources.list.d .list files from bookworm to trixie
+      shell: sed -i 's/bookworm/trixie/g' /etc/apt/sources.list.d/*.list
+      args:
+        removes: /etc/apt/sources.list.d/*.list
+      when: needs_debian_upgrade
+      failed_when: false
+
+    - name: Update sources.list.d .sources files from bookworm to trixie
+      shell: sed -i 's/bookworm/trixie/g' /etc/apt/sources.list.d/*.sources
+      args:
+        removes: /etc/apt/sources.list.d/*.sources
+      when: needs_debian_upgrade
+      failed_when: false
+
+    - name: Run apt update
+      apt:
+        update_cache: yes
+      when: needs_debian_upgrade
+
+    - name: Run apt full-upgrade
+      apt:
+        upgrade: full
+        dpkg_options: 'force-confdef,force-confold'
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      when: needs_debian_upgrade
+
+    - name: Reboot after Debian dist-upgrade
+      reboot:
+        reboot_timeout: 300
+        msg: "Rebooting after Debian dist-upgrade to trixie"
+      when: needs_debian_upgrade
+
+    - name: Wait for k3s service to be active after reboot
+      systemd:
+        name: k3s
+        state: started
+      when: needs_debian_upgrade
+
+    - name: Wait for master node to be Ready
+      shell: kubectl get node {{ inventory_hostname }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+      register: node_ready
+      retries: 30
+      delay: 10
+      until: node_ready.stdout == "True"
+      changed_when: false
+
+    - name: Uncordon master node
+      shell: kubectl uncordon {{ inventory_hostname }}
+      when: needs_k3s_upgrade or needs_debian_upgrade
+
+- name: Upgrade worker nodes
+  hosts: k3snodes
+  become: yes
+  serial: 1
+  gather_facts: no
+  vars:
+    k3s_target_version: "v1.34.3+k3s1"
+    target_debian_release: "trixie"
+    master_host: "{{ groups['master'][0] }}"
+  tasks:
+    - name: Check current k3s version
+      shell: k3s --version | awk '{print $3}'
+      register: current_k3s_version
+      changed_when: false
+      failed_when: false
+
+    - name: Set upgrade flags
+      set_fact:
+        needs_k3s_upgrade: "{{ current_k3s_version.stdout != k3s_target_version }}"
+        needs_debian_upgrade: "{{ ansible_distribution_release != target_debian_release }}"
+
+    - name: Drain worker node
+      shell: kubectl drain {{ inventory_hostname }} --ignore-daemonsets --delete-emptydir-data --timeout=120s
+      delegate_to: "{{ master_host }}"
+      when: needs_k3s_upgrade or needs_debian_upgrade
+
+    - name: Download k3s install script
+      get_url:
+        url: https://get.k3s.io
+        dest: /tmp/k3s_install.sh
+        mode: '0755'
+      when: needs_k3s_upgrade
+
+    - name: Upgrade k3s agent on worker node
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_target_version }}"
+        K3S_URL: "https://{{ hostvars[master_host]['ansible_ssh_host'] }}:6443"
+        K3S_TOKEN: "{{ hostvars[master_host]['k3s_token'] }}"
+      shell: /tmp/k3s_install.sh
+      when: needs_k3s_upgrade
+
+    - name: Wait for k3s-agent service to be active
+      systemd:
+        name: k3s-agent
+        state: started
+      when: needs_k3s_upgrade
+
+    - name: Update sources.list from bookworm to trixie
+      replace:
+        path: /etc/apt/sources.list
+        regexp: 'bookworm'
+        replace: 'trixie'
+      when: needs_debian_upgrade
+
+    - name: Update sources.list.d .list files from bookworm to trixie
+      shell: sed -i 's/bookworm/trixie/g' /etc/apt/sources.list.d/*.list
+      args:
+        removes: /etc/apt/sources.list.d/*.list
+      when: needs_debian_upgrade
+      failed_when: false
+
+    - name: Update sources.list.d .sources files from bookworm to trixie
+      shell: sed -i 's/bookworm/trixie/g' /etc/apt/sources.list.d/*.sources
+      args:
+        removes: /etc/apt/sources.list.d/*.sources
+      when: needs_debian_upgrade
+      failed_when: false
+
+    - name: Run apt update
+      apt:
+        update_cache: yes
+      when: needs_debian_upgrade
+
+    - name: Run apt full-upgrade
+      apt:
+        upgrade: full
+        dpkg_options: 'force-confdef,force-confold'
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      when: needs_debian_upgrade
+
+    - name: Reboot after Debian dist-upgrade
+      reboot:
+        reboot_timeout: 300
+        msg: "Rebooting after Debian dist-upgrade to trixie"
+      when: needs_debian_upgrade
+
+    - name: Wait for k3s-agent service to be active after reboot
+      systemd:
+        name: k3s-agent
+        state: started
+      when: needs_debian_upgrade
+
+    - name: Wait for worker node to be Ready
+      shell: kubectl get node {{ inventory_hostname }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+      delegate_to: "{{ master_host }}"
+      register: node_ready
+      retries: 30
+      delay: 10
+      until: node_ready.stdout == "True"
+      changed_when: false
+
+    - name: Uncordon worker node
+      shell: kubectl uncordon {{ inventory_hostname }}
+      delegate_to: "{{ master_host }}"
+      when: needs_k3s_upgrade or needs_debian_upgrade
