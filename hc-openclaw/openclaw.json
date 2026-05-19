@@ -1,0 +1,85 @@
+{
+  "browser": {
+    "remoteCdpTimeoutMs": 30000,
+    "attachOnly": true,
+    "defaultProfile": "default",
+    "profiles": {
+      "chrome": {
+        "cdpUrl": "http://openclaw-cdp.openclaw.svc:9222",
+        "color": "#4285F4"
+      },
+      "default": {
+        "cdpUrl": "http://openclaw-cdp.openclaw.svc:9222",
+        "color": "#4285F4"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "google/gemini-3.1-pro-preview"
+      },
+      "imageGenerationModel": {
+        "primary": "google/gemini-3.1-flash-image-preview"
+      },
+      "models": {
+        "anthropic/claude-sonnet-4-6": {
+          "params": {
+            "cacheRetention": "short",
+            "thinking": "adaptive"
+          }
+        },
+        "google/gemini-3.1-pro-preview": {
+          "params": {
+            "cacheRetention": "short",
+            "thinking": "adaptive"
+          }
+        }
+      },
+      "compaction": {
+        "mode": "safeguard"
+      }
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "allowlist",
+      "allowFrom": ["908679011"],
+      "botToken": "8723391197:AAEKif4Fr8FQO4yPr0uIhjirPncbFGPIKy8",
+      "groupPolicy": "allowlist",
+      "streaming": "partial"
+    }
+  },
+  "gateway": {
+    "mode": "local",
+    "bind": "loopback",
+    "controlUi": {
+      "allowedOrigins": [
+        "https://openclaw.home.dev"
+      ],
+      "dangerouslyDisableDeviceAuth": true
+    },
+    "auth": {
+      "mode": "token",
+      "token": "8fd07ff1318612693836fde06f10b6816e8b5dd5d2b789c469321b9ca6ba7593"
+    },
+    "trustedProxies": [
+      "127.0.0.0/8"
+    ]
+  },
+  "plugins": {
+    "entries": {
+      "telegram": {
+        "enabled": true
+      }
+    }
+  }
+
+}
