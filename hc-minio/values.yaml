@@ -10,6 +10,12 @@ minio:
   mode: standalone
   # -- Secret (rendered by templates/secret.yaml) holding rootUser/rootPassword.
   existingSecret: hc-minio-root
+  # -- Standalone mode uses a RWO Longhorn PVC. A rolling update can race the
+  # detach and cause `Multi-Attach` stalls when the new pod schedules to a
+  # different node before the old one releases the volume. `Recreate` forces
+  # the old pod to terminate first.
+  deploymentUpdate:
+    type: Recreate
   persistence:
     enabled: true
     storageClass: longhorn
@@ -32,6 +38,7 @@ minio:
   consoleService:
     type: ClusterIP
     port: 9001
+  # -- IAM (policies and users) lives in `iam.yaml`, applied via `helm -f iam.yaml`.
 
 # -- Gateway API route configuration (Traefik).
 route:

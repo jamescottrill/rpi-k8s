@@ -1,4 +1,7 @@
 mirrors:
+  "docker.home.dev":
+    endpoint:
+      - "http://docker.home.dev"
   "docker.home.internal":
     endpoint:
       - "http://docker.home.internal"
@@ -6,6 +9,12 @@ mirrors:
     "endpoint":
       - "https://registry-1.docker.io"
 configs:
+  "docker.home.dev":
+    "auth":
+      "username": "a5QxbI0ZmTh"
+      "password": "b2ojjtF%7rKHJcpI"
+    "tls":
+      "insecure_skip_verify": true
   "docker.home.internal":
     "auth":
       "username": "a5QxbI0ZmTh"

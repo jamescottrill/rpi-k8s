@@ -17,7 +17,7 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "google/gemini-3.1-pro-preview"
+        "primary": "google/gemini-3.1-pro"
       },
       "imageGenerationModel": {
         "primary": "google/gemini-3.1-flash-image-preview"
@@ -29,7 +29,7 @@
             "thinking": "adaptive"
           }
         },
-        "google/gemini-3.1-pro-preview": {
+        "google/gemini-3.1-pro": {
           "params": {
             "cacheRetention": "short",
             "thinking": "adaptive"
