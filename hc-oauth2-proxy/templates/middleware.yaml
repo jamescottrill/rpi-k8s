@@ -1,0 +1,16 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: oauth2-proxy-auth
+  namespace: {{ .Release.Namespace }}
+spec:
+  forwardAuth:
+    {{- /* oauth2-proxy answers 202 for a valid session and redirects to Keycloak otherwise; Traefik passes
+           that redirect straight back to the browser. */}}
+    address: http://{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local
+    trustForwardHeader: true
+    authResponseHeaders:
+      - X-Auth-Request-User
+      - X-Auth-Request-Email
+      - X-Auth-Request-Groups

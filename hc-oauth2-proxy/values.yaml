@@ -1,0 +1,46 @@
+tailnet: panga-degree.ts.net
+
+traefik:
+  namespace: kube-system
+  service: hc-traefik
+  gateway: traefik-gateway
+  listener: tailnet
+  port: 8000
+
+protectedApps:
+  - host: home
+    namespace: homepage
+    service: hc-homepage
+    port: 3000
+
+oauth2-proxy:
+  config:
+    existingSecret: oauth2-proxy
+    configFile: |-
+      provider = "keycloak-oidc"
+      oidc_issuer_url = "https://keycloak.panga-degree.ts.net/realms/homelab"
+      scope = "openid profile email groups"
+      code_challenge_method = "S256"
+      email_domains = ["*"]
+      allowed_groups = ["admins", "users"]
+      cookie_domains = [".panga-degree.ts.net"]
+      whitelist_domains = [".panga-degree.ts.net"]
+      cookie_secure = true
+      reverse_proxy = true
+      set_xauthrequest = true
+      skip_provider_button = true
+      upstreams = ["static://202"]
+  resources:
+    requests:
+      memory: 32Mi
+      cpu: 10m
+    limits:
+      memory: 128Mi
+      cpu: 200m
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist

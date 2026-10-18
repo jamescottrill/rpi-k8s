@@ -51,3 +51,4 @@ clients:
       - https://spiderfoot.panga-degree.ts.net/oauth2/callback
       - https://openfaas.panga-degree.ts.net/oauth2/callback
       - https://metabase.panga-degree.ts.net/oauth2/callback
+      - https://trino.panga-degree.ts.net/oauth2/callback
