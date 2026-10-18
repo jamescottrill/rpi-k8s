@@ -1,0 +1,7 @@
+apiVersion: v2
+name: hc-minio
+version: 0.1.0
+dependencies:
+  - name: minio
+    version: 5.4.0
+    repository: https://charts.min.io/

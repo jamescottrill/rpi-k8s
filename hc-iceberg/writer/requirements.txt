@@ -1,0 +1,7 @@
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic==2.9.2
+pyiceberg==0.11.1
+pyarrow==18.0.0
+boto3                 # version resolved alongside aiobotocore (s3fs dep)
+s3fs==2026.4.0        # pyiceberg fsspec FileIO uses this for s3:// paths

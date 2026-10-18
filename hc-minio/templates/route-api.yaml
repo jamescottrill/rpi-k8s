@@ -1,0 +1,22 @@
+{{- if .Values.route.enabled }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "hc-minio.fullname" . }}-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hc-minio.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ .Values.gateway.name }}
+      namespace: {{ .Values.gateway.namespace }}
+      sectionName: websecure
+  hostnames:
+    {{- range .Values.route.hostnames.api }}
+    - {{ . | quote }}
+    {{- end }}
+  rules:
+    - backendRefs:
+        - name: {{ .Values.route.apiServiceName }}
+          port: {{ .Values.minio.service.port }}
+{{- end }}

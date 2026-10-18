@@ -8,7 +8,6 @@
       - curl
       - apt-transport-https
       - ca-certificates
-      - software-properties-common
       - watchdog
     state: present
     update_cache: yes

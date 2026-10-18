@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hc-ascentric
+description: CronJob that scrapes the Ascentric portal and posts portfolio snapshots to the iceberg-writer service.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

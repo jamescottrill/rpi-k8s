@@ -1,0 +1,10 @@
+apiVersion: v2
+name: hc-nessie
+description: Wrapper around the official Nessie chart. Acts as the Iceberg catalog for iceberg-writer and Trino.
+type: application
+version: 0.1.0
+appVersion: "0.107.5"
+dependencies:
+  - name: nessie
+    version: 0.107.5
+    repository: https://charts.projectnessie.org

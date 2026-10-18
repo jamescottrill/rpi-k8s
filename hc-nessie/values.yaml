@@ -1,0 +1,48 @@
+nessie:
+  deploymentStrategy:
+    type: Recreate
+
+  versionStoreType: ROCKSDB
+  rocksdb:
+    storageClassName: longhorn
+    storageSize: 1Gi
+  service:
+    type: ClusterIP
+
+  livenessProbe:
+    initialDelaySeconds: 180
+    periodSeconds: 20
+    failureThreshold: 6
+    timeoutSeconds: 10
+  readinessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    failureThreshold: 30
+    timeoutSeconds: 10
+
+  resources:
+    requests:
+      memory: 384Mi
+      cpu: 100m
+    limits:
+      memory: 768Mi
+      cpu: 1000m
+
+  catalog:
+    enabled: true
+    iceberg:
+      defaultWarehouse: iceberg
+      warehouses:
+        - name: iceberg
+          location: s3://iceberg/
+    storage:
+      s3:
+        defaultOptions:
+          region: us-east-1
+          endpoint: http://hc-minio.minio.svc.cluster.local:9000
+          pathStyleAccess: true
+          authType: STATIC
+          accessKeySecret:
+            name: nessie-minio-creds
+            awsAccessKeyId: access-key
+            awsSecretAccessKey: secret-key
