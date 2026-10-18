@@ -1,0 +1,76 @@
+seaweedfs:
+  master:
+    replicas: 1
+    defaultReplication: "000"
+    volumeSizeLimitMB: 1024
+    data:
+      type: persistentVolumeClaim
+      size: 1Gi
+      storageClass: longhorn
+    logs:
+      type: emptyDir
+    affinity: |
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: DoesNotExist
+    resources:
+      requests:
+        memory: 64Mi
+        cpu: 25m
+      limits:
+        memory: 256Mi
+        cpu: 250m
+  volume:
+    replicas: 1
+    dataDirs:
+      - name: data1
+        type: persistentVolumeClaim
+        size: 20Gi
+        storageClass: longhorn
+        maxVolumes: 0
+    affinity: |
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: DoesNotExist
+    resources:
+      requests:
+        memory: 64Mi
+        cpu: 25m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+  filer:
+    replicas: 1
+    data:
+      type: persistentVolumeClaim
+      size: 2Gi
+      storageClass: longhorn
+    logs:
+      type: emptyDir
+    affinity: |
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: DoesNotExist
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 50m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+    s3:
+      enabled: true
+      enableAuth: true
+      existingConfigSecret: seaweedfs-s3-config
+      createBuckets:
+        - name: iceberg
+          anonymousRead: false

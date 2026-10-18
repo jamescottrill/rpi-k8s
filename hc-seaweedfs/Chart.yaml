@@ -1,0 +1,8 @@
+apiVersion: v2
+name: hc-seaweedfs
+description: Wrapper around the official SeaweedFS chart. S3-compatible object store for the Iceberg warehouse, replacing MinIO.
+version: 0.1.0
+dependencies:
+  - name: seaweedfs
+    version: 4.48.0
+    repository: https://seaweedfs.github.io/seaweedfs/helm
