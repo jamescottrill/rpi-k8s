@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Iceberg Writer"
+    gethomepage.dev/group: "Data"
+    gethomepage.dev/icon: "mdi-database-arrow-up"
+    gethomepage.dev/description: "Ingest API"
+    gethomepage.dev/href: "https://iceberg-writer.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app=iceberg-writer"
 spec:
   ingressClassName: tailscale
   defaultBackend:

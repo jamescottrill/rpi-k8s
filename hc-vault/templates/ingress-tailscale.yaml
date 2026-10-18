@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Vault"
+    gethomepage.dev/group: "Platform"
+    gethomepage.dev/icon: "vault.png"
+    gethomepage.dev/description: "Secret storage"
+    gethomepage.dev/href: "https://vault.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app.kubernetes.io/instance=hc-vault,app.kubernetes.io/name=vault,component=server"
 spec:
   ingressClassName: tailscale
   defaultBackend:

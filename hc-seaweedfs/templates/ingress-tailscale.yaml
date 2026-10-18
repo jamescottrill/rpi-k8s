@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "SeaweedFS S3"
+    gethomepage.dev/group: "Data"
+    gethomepage.dev/icon: "mdi-bucket"
+    gethomepage.dev/description: "Object storage"
+    gethomepage.dev/href: "https://s3.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app.kubernetes.io/component=filer,app.kubernetes.io/instance=hc-seaweedfs,app.kubernetes.io/name=seaweedfs"
 spec:
   ingressClassName: tailscale
   defaultBackend:

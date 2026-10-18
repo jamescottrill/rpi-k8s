@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Homebridge"
+    gethomepage.dev/group: "Home"
+    gethomepage.dev/icon: "homebridge.png"
+    gethomepage.dev/description: "HomeKit bridge"
+    gethomepage.dev/href: "https://homebridge.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app=homebridge"
 spec:
   ingressClassName: tailscale
   defaultBackend:

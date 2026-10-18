@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "SpiderFoot"
+    gethomepage.dev/group: "Apps"
+    gethomepage.dev/icon: "mdi-spider"
+    gethomepage.dev/description: "OSINT scanner"
+    gethomepage.dev/href: "https://spiderfoot.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app=spiderfoot"
 spec:
   ingressClassName: tailscale
   defaultBackend:
