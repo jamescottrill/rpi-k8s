@@ -6,6 +6,10 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   instances: 1
+  {{- /* KeycloakOIDCClient resources are applied through the v2 client admin API, a preview feature in 26.8. */}}
+  features:
+    enabled:
+      - client-admin-api:v2
   db:
     vendor: postgres
     host: keycloak-db-rw
