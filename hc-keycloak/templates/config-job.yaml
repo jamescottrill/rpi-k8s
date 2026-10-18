@@ -37,7 +37,11 @@ spec:
               done
               $K get "realms/$REALM" >/dev/null
 
-              scope_id=$($K get client-scopes -r "$REALM" --fields id,name --format csv --noquotes | awk -F, '$2=="groups"{print $1}')
+              # The Keycloak image has no awk, so parse the CSV with bash.
+              scope_id=""
+              while IFS=, read -r id name; do
+                [ "$name" = groups ] && scope_id=$id
+              done < <($K get client-scopes -r "$REALM" --fields id,name --format csv --noquotes)
               if [ -z "$scope_id" ]; then
                 scope_id=$($K create client-scopes -r "$REALM" -s name=groups -s protocol=openid-connect \
                   -s 'attributes."include.in.token.scope"=true' -i)
