@@ -3,3 +3,5 @@ gateway:
   namespace: kube-system
 serviceAccount:
   name: sa-openfaas
+openfaas:
+  generateBasicAuth: false

@@ -9,6 +9,8 @@ argo-cd:
   configs:
     params:
       server.insecure: true
+      controller.diff.server.side: "true"
+      reposerver.enable.git.submodule: "false"
   extraObjects:
     - apiVersion: networking.k8s.io/v1
       kind: Ingress
