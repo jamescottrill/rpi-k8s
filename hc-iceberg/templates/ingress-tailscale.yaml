@@ -1,0 +1,18 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: iceberg-writer-tailscale
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    tailscale.com/proxy-group: ingress-proxies
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: iceberg-writer
+      port:
+        number: 80
+  tls:
+    - hosts:
+        - iceberg-writer
