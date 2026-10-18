@@ -8,7 +8,10 @@ vendor:
 	for c in $(CRDS); do curl -sfL -o crds/$$c.k8s.keycloak.org-v1.yml $(BASE)/$$c.k8s.keycloak.org-v1.yml; done
 	# Keep the operator off the control-plane node, which has no spare memory, and give the JVM
 	# up to ~5 minutes to start: the upstream 35s startup-probe budget is too short on a Pi.
+	# The upstream 700m CPU limit throttled ~88% of periods at startup, starving the event loop
+	# until API connections timed out; allow bursts to 2 cores (the request is unchanged).
 	curl -sfL $(BASE)/kubernetes.yml \
 		| yq 'select(.kind == "Deployment").spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms = [{"matchExpressions": [{"key": "node-role.kubernetes.io/control-plane", "operator": "DoesNotExist"}]}]' \
 		| yq 'select(.kind == "Deployment").spec.template.spec.containers[0].startupProbe.failureThreshold = 30' \
+		| yq 'select(.kind == "Deployment").spec.template.spec.containers[0].resources.limits.cpu = "2000m"' \
 		> templates/operator.yaml
