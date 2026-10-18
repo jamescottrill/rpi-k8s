@@ -24,6 +24,11 @@ spec:
           - name: pihole
             image: pihole/pihole:latest
             imagePullPolicy: Always
+            env:
+              # LAN queries arrive SNAT'd from whichever node holds the LoadBalancer IP,
+              # so LOCAL mode silently drops them whenever that isn't the pod's node.
+              - name: FTLCONF_dns_listeningMode
+                value: ALL
             ports:
               - containerPort: 80
                 name: http
