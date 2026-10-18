@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hc-banking
+description: Bank-transaction ingestion and (future) live-sync CronJobs. Bulk historical imports happen via the scripts/ directory; live sync chart resources will be added once the historical backfill is in place.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

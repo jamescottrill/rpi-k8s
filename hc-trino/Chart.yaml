@@ -1,0 +1,10 @@
+apiVersion: v2
+name: hc-trino
+description: Wrapper around the official Trino chart. Single-coordinator deployment with the Iceberg+Nessie connector for querying personal-finance tables.
+type: application
+version: 0.1.0
+appVersion: "480"
+dependencies:
+  - name: trino
+    version: 1.42.2
+    repository: https://trinodb.github.io/charts

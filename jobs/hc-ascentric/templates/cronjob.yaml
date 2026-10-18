@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ascentric-scraper
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "hc-ascentric.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {{ .Values.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            {{- include "hc-ascentric.labels" . | nindent 12 }}
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: scraper
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              env:
+                - name: ICEBERG_WRITER_URL
+                  value: {{ .Values.icebergWriterUrl | quote }}
+              envFrom:
+                - secretRef:
+                    name: ascentric-credentials
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}

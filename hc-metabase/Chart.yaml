@@ -1,0 +1,10 @@
+apiVersion: v2
+name: hc-metabase
+description: Wrapper around pmint93/metabase. Metabase ships with a built-in Trino driver, so we can dashboard the Iceberg tables via the Trino in this cluster.
+type: application
+version: 0.1.0
+appVersion: "0.60.3.x"
+dependencies:
+  - name: metabase
+    version: 2.27.3
+    repository: https://pmint93.github.io/helm-charts

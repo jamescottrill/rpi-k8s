@@ -1,0 +1,28 @@
+# hc-minio — IAM definitions (policies and users).
+#
+# Kept separate from values.yaml so chart wiring and IAM concerns don't tangle.
+# Applied by the Makefile via `helm upgrade -f iam.yaml`.
+#
+# Shape matches the upstream `minio` subchart: see
+# https://github.com/minio/minio/blob/master/helm/minio/values.yaml
+# under `policies:` and `users:`.
+
+minio:
+  # -- MinIO IAM policies. Each policy is rendered to JSON by the upstream
+  # chart and applied via `mc admin policy create`.
+  policies:
+    - name: iceberg-writer
+      statements:
+        - resources:
+            - "arn:aws:s3:::iceberg"
+            - "arn:aws:s3:::iceberg/*"
+          actions:
+            - "s3:*"
+
+  # -- MinIO service users. Secret keys are sourced from in-cluster Secrets
+  # (rendered by templates/secret-iceberg-writer.yaml), not stored in values.
+  users:
+    - accessKey: iceberg-writer
+      existingSecret: iceberg-writer-keys
+      existingSecretKey: secretKey
+      policy: iceberg-writer

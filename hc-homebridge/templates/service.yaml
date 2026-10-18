@@ -30,9 +30,6 @@ spec:
     - port: 43776
       targetPort: 43776
       name: child-bridge-1
-    - port: 8581
-      targetPort: 8581
-      name: web-ui
     - name: mdns
       port: 5353
       targetPort: 5353

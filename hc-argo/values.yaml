@@ -1,0 +1,27 @@
+argo-cd:
+  redis-ha:
+    enabled: false
+  global:
+    domain: argocd.panga-degree.ts.net
+  server:
+    ingress:
+      enabled: false
+  configs:
+    params:
+      server.insecure: true
+  extraObjects:
+    - apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: argocd-tailscale
+        namespace: argo
+      spec:
+        ingressClassName: tailscale
+        defaultBackend:
+          service:
+            name: hc-argo-argocd-server
+            port:
+              number: 80
+        tls:
+          - hosts:
+              - argocd

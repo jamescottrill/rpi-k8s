@@ -1,0 +1,7 @@
+apiVersion: v2
+name: hc-tailscale
+version: 0.1.0
+dependencies:
+  - name: tailscale-operator
+    version: 1.104.1
+    repository: https://pkgs.tailscale.com/helmcharts

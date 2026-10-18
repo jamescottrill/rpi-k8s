@@ -1,0 +1,68 @@
+# OpenClaw instance configuration for Claude Max subscription.
+# See: https://openclaw.rocks/docs for full CRD reference.
+
+# -- Name for the OpenClawInstance resource
+instanceName: "openclaw"
+
+# -- Name of the Kubernetes secret containing the Claude Max setup token.
+# Create with: kubectl create secret generic openclaw-api-keys \
+#   --from-literal=CLAUDE_SETUP_TOKEN=<your-token> -n <namespace>
+secretName: "openclaw-api-keys"
+
+# -- Name of the secret containing the gateway authentication token.
+# Create with: kubectl create secret generic my-agent-gateway-token \
+#   --from-literal=token=<your-token> -n <namespace>
+gatewayTokenSecret: "my-agent-gateway-token"
+
+# -- Persistent storage configuration
+storage:
+  persistence:
+    enabled: true
+    # -- Size of the persistent volume claim
+    size: 10Gi
+    # -- Storage class name (leave empty for cluster default)
+    storageClassName: ""
+
+# -- Resource limits and requests for the agent pod
+resources: {}
+  # limits:
+  #   cpu: "2"
+  #   memory: 4Gi
+  # requests:
+  #   cpu: "500m"
+  #   memory: 1Gi
+
+# -- Enable Chromium sidecar for browser automation
+chromium:
+  enabled: true
+
+# -- Enable automatic updates for the OpenClaw agent
+autoUpdate:
+  enabled: true
+
+# -- Observability settings
+observability:
+  # -- Enable Prometheus metrics endpoint
+  prometheus: true
+
+# -- Gateway API route configuration
+route:
+  enabled: true
+  hostnames:
+    - openclaw.home.internal
+    - openclaw.home.dev
+  # -- Service name created by the operator (defaults to instanceName)
+  serviceName: ""
+  # -- Port exposed by the OpenClaw operator
+  servicePort: 18789
+
+# -- Gateway reference (Traefik)
+gateway:
+  name: traefik-gateway
+  namespace: kube-system
+
+# -- Service account configuration
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""

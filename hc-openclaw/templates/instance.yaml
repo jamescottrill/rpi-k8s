@@ -1,0 +1,46 @@
+apiVersion: openclaw.rocks/v1alpha1
+kind: OpenClawInstance
+metadata:
+  name: {{ .Values.instanceName | default (include "openclaw.fullname" .) }}
+  labels:
+    {{- include "openclaw.labels" . | nindent 4 }}
+spec:
+  image:
+    tag: latest
+  envFrom:
+    - secretRef:
+        name: {{ .Values.secretName }}
+  gateway:
+    controlUiOrigins:
+      {{- range .Values.route.hostnames }}
+      - "https://{{ . }}"
+      {{- end }}
+  config:
+    mergeMode: merge
+    configMapRef:
+      name: {{ include "openclaw.fullname" . }}-config
+      key: openclaw.json
+  storage:
+    persistence:
+      enabled: {{ .Values.storage.persistence.enabled }}
+      size: {{ .Values.storage.persistence.size }}
+      {{- if .Values.storage.persistence.storageClassName }}
+      storageClassName: {{ .Values.storage.persistence.storageClassName | quote }}
+      {{- end }}
+  {{- if .Values.resources }}
+  resources:
+    {{- toYaml .Values.resources | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chromium.enabled }}
+  chromium:
+    enabled: true
+  {{- end }}
+  {{- if .Values.autoUpdate.enabled }}
+  autoUpdate:
+    enabled: true
+  {{- end }}
+  {{- if .Values.observability.prometheus }}
+  observability:
+    metrics:
+      enabled: true
+  {{- end }}
