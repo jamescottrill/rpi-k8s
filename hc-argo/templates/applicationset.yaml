@@ -15,7 +15,7 @@ spec:
   generators:
     - git:
         repoURL: https://github.com/jamescottrill/rpi-k8s.git
-        revision: feat/argocd-apps
+        revision: master
         files:
           - path: "hc-*/argocd.yaml"
           - path: "jobs/*/argocd.yaml"
@@ -27,7 +27,7 @@ spec:
       project: default
       source:
         repoURL: https://github.com/jamescottrill/rpi-k8s.git
-        targetRevision: feat/argocd-apps
+        targetRevision: master
         path: "{{ .path.path }}"
         helm:
           releaseName: "{{ .releaseName }}"
@@ -35,6 +35,9 @@ spec:
         server: https://kubernetes.default.svc
         namespace: "{{ .namespace }}"
       syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true
