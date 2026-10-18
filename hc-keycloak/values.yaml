@@ -1,6 +1,28 @@
 tailnet: panga-degree.ts.net
 realm: homelab
 
+keycloakConfigCli:
+  tag: 6.5.1-26.5.5
+
+defaultClientScopes:
+  - role_list
+  - saml_organization
+  - AuthnContextClassRef
+  - profile
+  - email
+  - roles
+  - web-origins
+  - acr
+  - basic
+  - groups
+
+optionalClientScopes:
+  - offline_access
+  - address
+  - phone
+  - microprofile-jwt
+  - organization
+
 user:
   username: james
   firstName: James
