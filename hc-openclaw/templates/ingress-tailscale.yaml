@@ -1,0 +1,21 @@
+{{- if .Values.tailscale.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "openclaw.fullname" . }}-tailscale
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openclaw.labels" . | nindent 4 }}
+  annotations:
+    tailscale.com/proxy-group: {{ .Values.tailscale.proxyGroup }}
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: {{ .Values.route.serviceName | default .Values.instanceName }}
+      port:
+        number: {{ .Values.route.servicePort }}
+  tls:
+    - hosts:
+        - {{ .Values.tailscale.hostname }}
+{{- end }}

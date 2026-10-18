@@ -16,6 +16,11 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: {{ .Values.gateway.namespace }}
+        {{- if .Values.tailscale.enabled }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+        {{- end }}
       ports:
         - port: {{ .Values.route.servicePort }}
           protocol: TCP

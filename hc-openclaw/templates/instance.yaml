@@ -15,6 +15,9 @@ spec:
       {{- range .Values.route.hostnames }}
       - "https://{{ . }}"
       {{- end }}
+      {{- if .Values.tailscale.enabled }}
+      - "https://{{ .Values.tailscale.hostname }}.{{ .Values.tailscale.tailnet }}"
+      {{- end }}
   config:
     mergeMode: merge
     configMapRef:

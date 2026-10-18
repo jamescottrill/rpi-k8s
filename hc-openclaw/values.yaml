@@ -56,6 +56,12 @@ route:
   # -- Port exposed by the OpenClaw operator
   servicePort: 18789
 
+tailscale:
+  enabled: true
+  hostname: openclaw
+  proxyGroup: ingress-proxies
+  tailnet: panga-degree.ts.net
+
 # -- Gateway reference (Traefik)
 gateway:
   name: traefik-gateway
