@@ -16,6 +16,8 @@ import sys
 from pathlib import Path
 
 NAMESPACE = "vault"
+# Optional kubectl context, so the script never acts on whatever context happens to be current.
+KUBE_CONTEXT = os.environ.get("KUBE_CONTEXT")
 POD = "hc-vault-0"
 INIT_FILE = Path(__file__).resolve().parent.parent / ".dev" / "init.json"
 KEY_SHARES = 5
@@ -34,6 +36,22 @@ path "secret/metadata/*" {
 }
 """
 
+KEYCLOAK_ISSUER = "https://keycloak.panga-degree.ts.net/realms/homelab"
+OIDC_CLIENT_ID = "vault"
+OIDC_CLIENT_SECRET_PATH = "secret/keycloak/clients/vault"
+OIDC_REDIRECT_URIS = [
+    "https://vault.panga-degree.ts.net/ui/vault/auth/oidc/oidc/callback",
+    "http://localhost:8250/oidc/callback",
+]
+ADMIN_POLICY = "admin"
+ADMIN_POLICY_HCL = """\
+path "*" {
+  capabilities = ["create", "read", "update", "patch", "delete", "list", "sudo"]
+}
+"""
+# Keycloak group name -> Vault policies granted to its members.
+OIDC_GROUP_POLICIES = {"admins": [ADMIN_POLICY]}
+
 # Reads the token from the first stdin line, so whatever follows on stdin is
 # still available to the vault command (e.g. a policy or KV JSON body).
 _WITH_TOKEN = 'read -r VAULT_TOKEN; export VAULT_TOKEN; exec vault "$@"'
@@ -43,13 +61,18 @@ class VaultError(RuntimeError):
     """A vault CLI call inside the pod exited non-zero."""
 
 
+def kubectl() -> list[str]:
+    """The kubectl command prefix, pinned to KUBE_CONTEXT when it is set."""
+    return ["kubectl", "--context", KUBE_CONTEXT] if KUBE_CONTEXT else ["kubectl"]
+
+
 def vault(args: list[str], token: str | None = None, stdin: str = "") -> str:
     """Run `vault <args>` in the Vault pod and return its stdout.
 
     When `token` is given it is passed on the first stdin line, ahead of
     `stdin`. Raises VaultError carrying vault's stderr on failure.
     """
-    cmd = ["kubectl", "exec", "-i", "-n", NAMESPACE, POD, "--"]
+    cmd = [*kubectl(), "exec", "-i", "-n", NAMESPACE, POD, "--"]
     if token is None:
         cmd += ["vault", *args]
         payload = stdin
@@ -68,7 +91,7 @@ def status() -> dict:
     `vault status` exits 2 when sealed. kubectl exec collapses every non-zero
     exit to 1, so the sealed case is mapped to success inside the pod instead.
     """
-    cmd = ["kubectl", "exec", "-n", NAMESPACE, POD, "--", "sh", "-c", "vault status -format=json || [ $? -eq 2 ]"]
+    cmd = [*kubectl(), "exec", "-n", NAMESPACE, POD, "--", "sh", "-c", "vault status -format=json || [ $? -eq 2 ]"]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         raise VaultError(f"vault status failed: {result.stderr.strip()}")
@@ -141,7 +164,54 @@ def cmd_configure(_: argparse.Namespace) -> None:
         ],
         token=token,
     )
-    print("Configured kv-v2 at secret/, kubernetes auth, and the external-secrets role.")
+    configure_oidc(token)
+    print("Configured kv-v2 at secret/, kubernetes auth, the external-secrets role and Keycloak OIDC.")
+
+
+def configure_oidc(token: str) -> None:
+    """Let Keycloak users log in to Vault, with Keycloak groups mapped to Vault policies.
+
+    Every step checks current state first, so re-running changes nothing. The OIDC client
+    secret is read from KV and sent to the pod on stdin, never in argv.
+    """
+    auths = json.loads(vault(["auth", "list", "-format=json"], token=token))
+    if "oidc/" not in auths:
+        vault(["auth", "enable", "oidc"], token=token)
+        auths = json.loads(vault(["auth", "list", "-format=json"], token=token))
+    accessor = auths["oidc/"]["accessor"]
+
+    client_secret = vault(["kv", "get", "-field=client_secret", OIDC_CLIENT_SECRET_PATH], token=token).strip()
+    config = {
+        "oidc_discovery_url": KEYCLOAK_ISSUER,
+        "oidc_client_id": OIDC_CLIENT_ID,
+        "oidc_client_secret": client_secret,
+        "default_role": "default",
+    }
+    vault(["write", "auth/oidc/config", "-"], token=token, stdin=json.dumps(config))
+    role = {
+        "user_claim": "preferred_username",
+        "groups_claim": "groups",
+        "allowed_redirect_uris": OIDC_REDIRECT_URIS,
+        "token_policies": ["default"],
+        "token_ttl": "8h",
+    }
+    vault(["write", "auth/oidc/role/default", "-"], token=token, stdin=json.dumps(role))
+    vault(["policy", "write", ADMIN_POLICY, "-"], token=token, stdin=ADMIN_POLICY_HCL)
+
+    for group, policies in OIDC_GROUP_POLICIES.items():
+        # identity/lookup/group returns nothing (exit 0) for a missing group. `vault list` would exit 2
+        # for an empty path, indistinguishable from a real error once kubectl exec relays it.
+        found = vault(["write", "-format=json", "identity/lookup/group", f"name={group}"], token=token).strip()
+        if found:
+            data = json.loads(found)["data"]
+            group_id, has_alias = data["id"], bool(data.get("alias"))
+        else:
+            created = vault(["write", "-format=json", "identity/group", f"name={group}", "type=external",
+                             f"policies={','.join(policies)}"], token=token)
+            group_id, has_alias = json.loads(created)["data"]["id"], False
+        if not has_alias:
+            vault(["write", "identity/group-alias", f"name={group}", f"mount_accessor={accessor}",
+                   f"canonical_id={group_id}"], token=token)
 
 
 def put_secret(path: str, data: dict[str, str], token: str) -> None:

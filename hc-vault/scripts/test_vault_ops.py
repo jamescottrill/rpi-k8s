@@ -115,8 +115,10 @@ def test_configure_skips_enabling_existing_mounts(init_file):
         calls.append(args)
         return responses.get(tuple(args[:2]), "")
 
-    with mock.patch.object(vault_ops, "vault", side_effect=fake_vault):
+    with mock.patch.object(vault_ops, "vault", side_effect=fake_vault), \
+         mock.patch.object(vault_ops, "configure_oidc") as configure_oidc:
         vault_ops.cmd_configure(None)
+    configure_oidc.assert_called_once_with("t")
     assert ["secrets", "enable", "-path=secret", "kv-v2"] not in calls
     assert ["auth", "enable", "kubernetes"] not in calls
     assert any(c[:2] == ["write", "auth/kubernetes/role/external-secrets"] for c in calls)
@@ -129,3 +131,86 @@ def test_put_secret_sends_values_on_stdin():
     assert args == ["kv", "put", "secret/app/creds", "-"]
     assert "hunter2" not in " ".join(args)
     assert json.loads(vault.call_args.kwargs["stdin"]) == {"password": "hunter2"}
+
+
+class FakeVault:
+    """Records vault calls and answers list/read commands from in-memory state."""
+
+    def __init__(self, auths=None, groups=None, aliases=None):
+        self.calls = []
+        self.auths = auths if auths is not None else {"token/": {}}
+        self.groups = groups if groups is not None else {}
+        self.aliases = aliases if aliases is not None else []
+
+    def __call__(self, args, token=None, stdin=""):
+        self.calls.append((args, stdin))
+        if args[:2] == ["auth", "enable"]:
+            self.auths[f"{args[2]}/"] = {}
+        if args[:2] == ["auth", "list"]:
+            return json.dumps({k: {"accessor": f"auth_{k.rstrip('/')}_123"} for k in self.auths})
+        if args[:2] == ["kv", "get"]:
+            return "kc-client-secret"
+        if args[:3] == ["write", "-format=json", "identity/lookup/group"]:
+            # Real Vault: exit 0 with empty output when the group does not exist.
+            name = args[3].split("=", 1)[1]
+            if name not in self.groups:
+                return ""
+            return json.dumps({"data": {"id": self.groups[name], "alias": {"name": name} if name in self.aliases else {}}})
+        if args[:2] == ["write", "-format=json"] and args[2] == "identity/group":
+            return json.dumps({"data": {"id": "new-group-id"}})
+        return ""
+
+    def commands(self):
+        return [args for args, _ in self.calls]
+
+
+def test_configure_oidc_on_fresh_vault_creates_everything():
+    fake = FakeVault()
+    with mock.patch.object(vault_ops, "vault", side_effect=fake):
+        vault_ops.configure_oidc("t")
+    cmds = fake.commands()
+    assert ["auth", "enable", "oidc"] in cmds
+    assert any(c[:2] == ["write", "-format=json"] and c[2] == "identity/group" for c in cmds)
+    assert any(c[:2] == ["write", "identity/group-alias"] for c in cmds)
+    assert ["policy", "write", vault_ops.ADMIN_POLICY, "-"] in cmds
+
+
+def test_configure_oidc_is_idempotent_when_already_configured():
+    fake = FakeVault(auths={"token/": {}, "oidc/": {}}, groups={"admins": "gid-1"}, aliases=["admins"])
+    with mock.patch.object(vault_ops, "vault", side_effect=fake):
+        vault_ops.configure_oidc("t")
+    cmds = fake.commands()
+    assert ["auth", "enable", "oidc"] not in cmds
+    assert not any(c[:2] == ["write", "-format=json"] and c[2] == "identity/group" for c in cmds)
+    assert not any(c[:2] == ["write", "identity/group-alias"] for c in cmds)
+
+
+def test_configure_oidc_adds_missing_alias_to_existing_group():
+    fake = FakeVault(auths={"token/": {}, "oidc/": {}}, groups={"admins": "gid-1"})
+    with mock.patch.object(vault_ops, "vault", side_effect=fake):
+        vault_ops.configure_oidc("t")
+    alias = [c for c in fake.commands() if c[:2] == ["write", "identity/group-alias"]]
+    assert alias and "canonical_id=gid-1" in alias[0] and "mount_accessor=auth_oidc_123" in alias[0]
+
+
+def test_configure_oidc_keeps_client_secret_out_of_argv():
+    fake = FakeVault()
+    with mock.patch.object(vault_ops, "vault", side_effect=fake):
+        vault_ops.configure_oidc("t")
+    assert all("kc-client-secret" not in " ".join(args) for args, _ in fake.calls)
+    config = [stdin for args, stdin in fake.calls if args[:2] == ["write", "auth/oidc/config"]]
+    assert config and json.loads(config[0])["oidc_client_secret"] == "kc-client-secret"
+
+
+def test_kubectl_is_pinned_to_kube_context_when_set(monkeypatch):
+    monkeypatch.setattr(vault_ops, "KUBE_CONTEXT", "rpi")
+    with mock.patch("subprocess.run", return_value=completed("{}")) as run:
+        vault_ops.status()
+    assert run.call_args.args[0][:3] == ["kubectl", "--context", "rpi"]
+
+
+def test_kubectl_uses_current_context_when_unset(monkeypatch):
+    monkeypatch.setattr(vault_ops, "KUBE_CONTEXT", None)
+    with mock.patch("subprocess.run", return_value=completed("{}")) as run:
+        vault_ops.status()
+    assert run.call_args.args[0][:2] == ["kubectl", "exec"]
