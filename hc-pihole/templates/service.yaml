@@ -32,3 +32,5 @@ spec:
       targetPort: 53
       name: dns-udp
   type: LoadBalancer
+  # Preserve client IPs so pihole sees each device, and announce only from the pod's node.
+  externalTrafficPolicy: Local

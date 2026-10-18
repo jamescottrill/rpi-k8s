@@ -1,0 +1,8 @@
+releaseName: openclaw
+namespace: openclaw
+ignoreDifferences:
+  - group: ""
+    kind: ConfigMap
+    name: openclaw-config
+    jsonPointers:
+      - /metadata/labels

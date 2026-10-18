@@ -5,6 +5,7 @@ metadata:
   labels:
     {{- include "openclaw.labels" . | nindent 4 }}
 data:
-  openclaw.json: |
-    {{- .Files.Get "openclaw.json" | nindent 4 }}
+  {{- /* The operator rewrites this key as sorted, 2-space JSON; rendering the same form keeps ArgoCD in sync. */}}
+  openclaw.json: |-
+    {{- .Files.Get "openclaw.json" | fromJson | toPrettyJson | nindent 4 }}
 

@@ -1,0 +1,57 @@
+{{- /* Raw string: the ApplicationSet's own Go templates must reach ArgoCD unrendered by Helm. */}}
+{{`
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster
+  namespace: argo
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+  syncPolicy:
+    preserveResourcesOnDeletion: true
+  generators:
+    - git:
+        repoURL: https://github.com/jamescottrill/rpi-k8s.git
+        revision: master
+        files:
+          - path: "hc-*/argocd.yaml"
+          - path: "jobs/*/argocd.yaml"
+          - path: "hc-osint/*/helm-chart/argocd.yaml"
+  template:
+    metadata:
+      name: "{{ .releaseName }}"
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/jamescottrill/rpi-k8s.git
+        targetRevision: master
+        path: "{{ .path.path }}"
+        helm:
+          releaseName: "{{ .releaseName }}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{ .namespace }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+          - RespectIgnoreDifferences=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 30s
+            factor: 2
+            maxDuration: 5m
+  templatePatch: |
+    {{- if hasKey . "ignoreDifferences" }}
+    spec:
+      ignoreDifferences:
+        {{- toYaml .ignoreDifferences | nindent 4 }}
+    {{- end }}
+`}}

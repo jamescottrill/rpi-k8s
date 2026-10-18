@@ -4,3 +4,5 @@ longhorn:
     defaultReplicaCount: 2
   persistence:
     defaultClassReplicaCount: 2
+  preUpgradeChecker:
+    jobEnabled: false
