@@ -1,3 +1,6 @@
+gateway:
+  name: traefik-gateway
+  namespace: kube-system
 seaweedfs:
   master:
     replicas: 1

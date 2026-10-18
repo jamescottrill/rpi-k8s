@@ -39,7 +39,7 @@ nessie:
       s3:
         defaultOptions:
           region: us-east-1
-          endpoint: http://hc-minio.minio.svc.cluster.local:9000
+          endpoint: http://hc-seaweedfs-s3.seaweedfs.svc.cluster.local:8333
           pathStyleAccess: true
           authType: STATIC
           accessKeySecret:
