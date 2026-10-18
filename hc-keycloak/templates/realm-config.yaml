@@ -1,0 +1,85 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-realm-config
+  namespace: {{ .Release.Namespace }}
+data:
+  {{- /* Applied by keycloak-config-cli. $(env:...) placeholders are substituted by the tool, from Secrets.
+         Client and client-scope deletion is disabled (IMPORT_MANAGED_* = no-delete), so removing an entry
+         here does not remove it from Keycloak; delete it in the admin console as well. */}}
+  {{ .Values.realm }}.yaml: |
+    realm: {{ .Values.realm }}
+    enabled: true
+    displayName: Home Lab
+    sslRequired: external
+    registrationAllowed: false
+    loginWithEmailAllowed: true
+    bruteForceProtected: true
+    defaultDefaultClientScopes:
+      {{- range .Values.defaultClientScopes }}
+      - {{ . }}
+      {{- end }}
+    defaultOptionalClientScopes:
+      {{- range .Values.optionalClientScopes }}
+      - {{ . }}
+      {{- end }}
+    clientScopes:
+      - name: groups
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+        protocolMappers:
+          - name: groups
+            protocol: openid-connect
+            protocolMapper: oidc-group-membership-mapper
+            config:
+              full.path: "false"
+              claim.name: groups
+              id.token.claim: "true"
+              access.token.claim: "true"
+              userinfo.token.claim: "true"
+    groups:
+      - name: admins
+      - name: users
+    users:
+      - username: {{ .Values.user.username }}
+        firstName: {{ .Values.user.firstName }}
+        enabled: true
+        groups:
+          - /admins
+        credentials:
+          {{- /* userLabel "initial": set only when the user is created, never overwritten afterwards. */}}
+          - type: password
+            userLabel: initial
+            value: $(env:USER_PASSWORD)
+            temporary: true
+    clients:
+      {{- range .Values.clients }}
+      - clientId: {{ .name }}
+        enabled: true
+        protocol: openid-connect
+        publicClient: false
+        clientAuthenticatorType: client-secret
+        secret: $(env:{{ include "hc-keycloak.clientSecretEnv" .name }})
+        standardFlowEnabled: true
+        implicitFlowEnabled: false
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        redirectUris:
+          {{- toYaml .redirectUris | nindent 10 }}
+        webOrigins:
+          - "+"
+        defaultClientScopes:
+          - web-origins
+          - acr
+          - profile
+          - roles
+          - basic
+          - email
+          - groups
+        optionalClientScopes:
+          {{- range $.Values.optionalClientScopes }}
+          - {{ . }}
+          {{- end }}
+      {{- end }}
