@@ -17,9 +17,13 @@ spec:
           image: quay.io/keycloak/keycloak:{{ .Chart.AppVersion }}
           env:
             - name: ADMIN_USER
-              valueFrom: {secretKeyRef: {name: keycloak-admin, key: username}}
+              valueFrom: {secretKeyRef: {name: keycloak-bootstrap-user, key: username}}
             - name: ADMIN_PASSWORD
-              valueFrom: {secretKeyRef: {name: keycloak-admin, key: password}}
+              valueFrom: {secretKeyRef: {name: keycloak-bootstrap-user, key: password}}
+            - name: OPERATOR_CLIENT_ID
+              valueFrom: {secretKeyRef: {name: keycloak-admin, key: client-id}}
+            - name: OPERATOR_CLIENT_SECRET
+              valueFrom: {secretKeyRef: {name: keycloak-admin, key: client-secret}}
             - name: REALM
               value: {{ .Values.realm }}
             - name: CLIENTS
@@ -36,6 +40,18 @@ spec:
                 echo "waiting for keycloak and realm $REALM ($i)"; sleep 10
               done
               $K get "realms/$REALM" >/dev/null
+
+              # The operator logs in as this master-realm service account. Bootstrap only creates it on a
+              # brand-new cluster, so ensure it here, keeping its secret in line with Vault.
+              op_id=$($K get clients -r master -q "clientId=$OPERATOR_CLIENT_ID" --fields id --format csv --noquotes)
+              if [ -z "$op_id" ]; then
+                op_id=$($K create clients -r master -s "clientId=$OPERATOR_CLIENT_ID" -s enabled=true \
+                  -s publicClient=false -s serviceAccountsEnabled=true -s standardFlowEnabled=false \
+                  -s directAccessGrantsEnabled=false -i)
+                echo "created $OPERATOR_CLIENT_ID service account"
+              fi
+              $K update "clients/$op_id" -r master -s "secret=$OPERATOR_CLIENT_SECRET"
+              $K add-roles -r master --uusername "service-account-$OPERATOR_CLIENT_ID" --rolename admin
 
               # The Keycloak image has no awk, so parse the CSV with bash.
               scope_id=""
