@@ -1,0 +1,56 @@
+---
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+  namespace: {{ .Release.Namespace }}
+spec:
+  instances: 1
+  db:
+    vendor: postgres
+    host: keycloak-db-rw
+    database: keycloak
+    usernameSecret:
+      name: keycloak-db-app
+      key: username
+    passwordSecret:
+      name: keycloak-db-app
+      key: password
+  bootstrapAdmin:
+    user:
+      secret: keycloak-admin
+  http:
+    httpEnabled: true
+    httpPort: 8080
+  hostname:
+    {{- /* One public URL for browsers and pods: pods reach it over the tailnet egress proxy. */}}
+    hostname: https://keycloak.{{ .Values.tailnet }}
+    strict: true
+  proxy:
+    headers: xforwarded
+  ingress:
+    enabled: false
+  networkPolicy:
+    enabled: true
+    http:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: tailscale
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: {{ .Release.Namespace }}
+  resources:
+    requests:
+      memory: 768Mi
+      cpu: 200m
+    limits:
+      memory: 1536Mi
+      cpu: 2000m
+  scheduling:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: DoesNotExist
