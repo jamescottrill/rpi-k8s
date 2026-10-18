@@ -4,9 +4,7 @@
 # -- Name for the OpenClawInstance resource
 instanceName: "openclaw"
 
-# -- Name of the Kubernetes secret containing the Claude Max setup token.
-# Create with: kubectl create secret generic openclaw-api-keys \
-#   --from-literal=CLAUDE_SETUP_TOKEN=<your-token> -n <namespace>
+# -- Name of the Kubernetes secret synced from Vault secret/openclaw/api-keys.
 secretName: "openclaw-api-keys"
 
 # -- Name of the secret containing the gateway authentication token.

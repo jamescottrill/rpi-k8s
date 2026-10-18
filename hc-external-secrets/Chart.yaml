@@ -1,0 +1,7 @@
+apiVersion: v2
+name: hc-external-secrets
+version: 0.1.0
+dependencies:
+  - name: external-secrets
+    version: 2.13.0
+    repository: https://charts.external-secrets.io
