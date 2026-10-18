@@ -428,7 +428,7 @@ spec:
               memory: 450Mi
               cpu: 300m
           startupProbe:
-            failureThreshold: 3
+            failureThreshold: 30
             httpGet:
               path: /q/health/started
               port: 8080
