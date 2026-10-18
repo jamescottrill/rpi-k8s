@@ -1,6 +1,10 @@
 kube-prometheus-stack:
   grafana:
     enabled: true
+    grafana.ini:
+      server:
+        domain: grafana.panga-degree.ts.net
+        root_url: https://grafana.panga-degree.ts.net/
     route:
       main:
         enabled: true
