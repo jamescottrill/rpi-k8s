@@ -1,0 +1,8 @@
+apiVersion: v2
+name: hc-cnpg
+description: Wrapper around the CloudNativePG operator, which runs the Postgres clusters used in this repo (Keycloak's database).
+version: 0.1.0
+dependencies:
+  - name: cloudnative-pg
+    version: 0.29.1
+    repository: https://cloudnative-pg.github.io/charts
