@@ -1,11 +1,3 @@
 gateway:
   name: traefik-gateway
   namespace: kube-system
-
-# -- S3/MinIO credentials for the iceberg-writer service user.
-# The secret key and API token are read from gitignored .dev/ files by
-# templates/secret.yaml. The secret key must match hc-minio's
-# .dev/iceberg-writer-secret-key.txt — the dedicated `iceberg-writer`
-# MinIO user, scoped to the `iceberg` bucket.
-s3:
-  accessKey: iceberg-writer

@@ -6,7 +6,6 @@ harbor:
     type: clusterIp
     tls:
       enabled: false
-htpasswd: a5QxbI0ZmTh:$2y$05$1uT.qP6kuIM3ZThpyp0Hqu6/DxvNASzdsHA7FO3ceRs7xT3dtCiJ6
 dockerRegistry:
   authentication:
     htpasswd:

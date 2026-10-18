@@ -1,6 +1,3 @@
 tailscale-operator:
-  oauth:
-    clientId: k68dQMhzCi11CNTRL
-    clientSecret: tskey-client-k68dQMhzCi11CNTRL-NT7cSkdB1F6SASnJ5NSGF6Zsmgi9QiBHj
   apiServerProxyConfig:
     mode: true
