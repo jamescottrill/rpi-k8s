@@ -1,6 +1,7 @@
 tailscale-operator:
   apiServerProxyConfig:
     mode: true
-tailnetDNS:
+tailnetEgress:
   domain: panga-degree.ts.net
-  nameserverIP: 10.43.0.53
+  hosts:
+    - keycloak

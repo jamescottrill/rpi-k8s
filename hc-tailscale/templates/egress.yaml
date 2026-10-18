@@ -1,0 +1,39 @@
+---
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: egress-proxies
+spec:
+  type: egress
+  replicas: 2
+{{- range .Values.tailnetEgress.hosts }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ . }}-tailnet
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    tailscale.com/tailnet-fqdn: {{ . }}.{{ $.Values.tailnetEgress.domain }}
+    tailscale.com/proxy-group: egress-proxies
+spec:
+  type: ExternalName
+  externalName: placeholder
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  {{- /* k3s CoreDNS imports *.override keys into its main server block. Pods resolving these tailnet
+         names get the egress proxy, so they reach the app over the tailnet with its real certificate. */}}
+  tailnet.override: |
+    {{- range .Values.tailnetEgress.hosts }}
+    rewrite stop name exact {{ . }}.{{ $.Values.tailnetEgress.domain }} {{ . }}-tailnet.{{ $.Release.Namespace }}.svc.cluster.local answer auto
+    {{- end }}
