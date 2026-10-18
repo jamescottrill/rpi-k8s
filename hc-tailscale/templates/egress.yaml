@@ -6,6 +6,8 @@ metadata:
 spec:
   type: egress
   replicas: 2
+{{- /* Egress proxies resolve each tailnet host when they start and do not retry. If a host is added
+       here before it exists on the tailnet, restart the egress-proxies pods once it does. */}}
 {{- range .Values.tailnetEgress.hosts }}
 ---
 apiVersion: v1

@@ -1,6 +1,8 @@
 argo-cd:
   redis-ha:
     enabled: false
+  dex:
+    enabled: false
   global:
     domain: argocd.panga-degree.ts.net
   server:
@@ -12,6 +14,19 @@ argo-cd:
       controller.diff.server.side: "true"
       reposerver.enable.git.submodule: "false"
       applicationsetcontroller.enable.git.submodule: "false"
+    cm:
+      oidc.config: |
+        name: Keycloak
+        issuer: https://keycloak.panga-degree.ts.net/realms/homelab
+        clientID: argocd
+        clientSecret: $argocd-oidc:clientSecret
+        requestedScopes: ["openid", "profile", "email", "groups"]
+    rbac:
+      policy.default: ""
+      scopes: "[groups]"
+      policy.csv: |
+        g, admins, role:admin
+        g, users, role:readonly
   extraObjects:
     - apiVersion: networking.k8s.io/v1
       kind: Ingress
