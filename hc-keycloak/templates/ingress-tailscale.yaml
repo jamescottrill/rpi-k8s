@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak-tailscale
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Keycloak"
+    gethomepage.dev/group: "Platform"
+    gethomepage.dev/icon: "keycloak.png"
+    gethomepage.dev/description: "Single sign-on"
+    gethomepage.dev/href: "https://keycloak.{{ .Values.tailnet }}/admin/{{ .Values.realm }}/console/"
+    gethomepage.dev/pod-selector: "app=keycloak,app.kubernetes.io/instance=keycloak"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: keycloak-service
+      port:
+        number: 8080
+  tls:
+    - hosts:
+        - keycloak

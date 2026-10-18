@@ -1,0 +1,31 @@
+tailnet: panga-degree.ts.net
+realm: homelab
+
+user:
+  username: james
+  firstName: James
+
+clients:
+  - name: argocd
+    redirectUris:
+      - https://argocd.panga-degree.ts.net/auth/callback
+  - name: grafana
+    redirectUris:
+      - https://grafana.panga-degree.ts.net/login/generic_oauth
+  - name: vault
+    redirectUris:
+      - https://vault.panga-degree.ts.net/ui/vault/auth/oidc/oidc/callback
+      - http://localhost:8250/oidc/callback
+  - name: trino
+    redirectUris:
+      - https://trino.panga-degree.ts.net/oauth2/callback
+  - name: oauth2-proxy
+    redirectUris:
+      - https://home.panga-degree.ts.net/oauth2/callback
+      - https://longhorn.panga-degree.ts.net/oauth2/callback
+      - https://dashboard.panga-degree.ts.net/oauth2/callback
+      - https://pihole.panga-degree.ts.net/oauth2/callback
+      - https://homebridge.panga-degree.ts.net/oauth2/callback
+      - https://spiderfoot.panga-degree.ts.net/oauth2/callback
+      - https://openfaas.panga-degree.ts.net/oauth2/callback
+      - https://metabase.panga-degree.ts.net/oauth2/callback

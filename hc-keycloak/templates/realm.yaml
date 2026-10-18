@@ -1,0 +1,37 @@
+---
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: KeycloakRealmImport
+metadata:
+  name: {{ .Values.realm }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  keycloakCRName: keycloak
+  {{- /* Imported once, when the realm is first created. clientScopes is deliberately omitted:
+         supplying any would stop Keycloak creating its built-in scopes. The groups scope is added
+         by the keycloak-config hook instead. */}}
+  placeholders:
+    USER_PASSWORD:
+      secret:
+        name: keycloak-user
+        key: password
+  realm:
+    realm: {{ .Values.realm }}
+    displayName: Home Lab
+    enabled: true
+    sslRequired: external
+    registrationAllowed: false
+    loginWithEmailAllowed: true
+    bruteForceProtected: true
+    groups:
+      - name: admins
+      - name: users
+    users:
+      - username: {{ .Values.user.username }}
+        firstName: {{ .Values.user.firstName }}
+        enabled: true
+        groups:
+          - /admins
+        credentials:
+          - type: password
+            value: "${USER_PASSWORD}"
+            temporary: true

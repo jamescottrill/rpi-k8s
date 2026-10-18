@@ -1,0 +1,22 @@
+{{- range .Values.clients }}
+---
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: KeycloakOIDCClient
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  keycloakCRName: keycloak
+  realm: {{ $.Values.realm }}
+  client:
+    enabled: true
+    loginFlows:
+      - STANDARD
+    redirectUris:
+      {{- toYaml .redirectUris | nindent 6 }}
+    auth:
+      method: client-secret
+      secretRef:
+        name: client-{{ .name }}
+        key: client-secret
+{{- end }}
