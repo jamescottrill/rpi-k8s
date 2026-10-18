@@ -1,2 +1,7 @@
 releaseName: hc-tailscale
 namespace: tailscale
+ignoreDifferences:
+  - group: ""
+    kind: Service
+    jsonPointers:
+      - /spec/externalName
