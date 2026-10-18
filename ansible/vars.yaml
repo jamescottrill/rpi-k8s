@@ -1,2 +1,5 @@
 k3s_version: "v1.34.3+k3s1"
 disable_components: 'servicelb,traefik'
+# Soft taint: keeps ordinary pods off the control plane but lets per-node DaemonSets
+# (Longhorn holds replicas on rpi1) keep running there.
+master_node_taint: 'node-role.kubernetes.io/control-plane:PreferNoSchedule'
