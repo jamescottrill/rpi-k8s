@@ -1,14 +1,11 @@
 gateway:
   name: traefik-gateway
   namespace: kube-system
-
 metabase:
   javaOpts: "-Xmx1536m -Xms512m"
-
   extraEnv:
     - name: MB_SITE_URL
       value: https://metabase.home.dev
-
   database:
     type: h2
     persistence:
@@ -16,7 +13,6 @@ metabase:
       enabled: true
       storageClassName: longhorn
       size: 5Gi
-
   resources:
     requests:
       memory: 768Mi
@@ -24,6 +20,8 @@ metabase:
     limits:
       memory: 2Gi
       cpu: 1500m
+  startupProbe:
+    failureThreshold: 180
 
   livenessProbe:
     httpGet:
@@ -41,13 +39,12 @@ metabase:
     periodSeconds: 10
     failureThreshold: 30
     timeoutSeconds: 5
-
   strategy:
     type: Recreate
-
   service:
     type: ClusterIP
     port: 80
-
   ingress:
     enabled: false
+  startupProbe:
+    failureThreshold: 180
