@@ -1,0 +1,78 @@
+{{- range $app := .Values.protectedApps }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  {{- /* A Tailscale Ingress can only target a Service in its own namespace, so it lives with Traefik. */}}
+  name: {{ .host }}-tailscale
+  namespace: {{ $.Values.traefik.namespace }}
+  annotations:
+    tailscale.com/proxy-group: ingress-proxies
+    {{- with $app.homepage }}
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/href: "https://{{ $app.host }}.{{ $.Values.tailnet }}"
+    {{- range $k, $v := . }}
+    gethomepage.dev/{{ $k }}: {{ $v | quote }}
+    {{- end }}
+    {{- end }}
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: {{ $.Values.traefik.service }}
+      port:
+        number: {{ $.Values.traefik.port }}
+  tls:
+    - hosts:
+        - {{ .host }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .host }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  parentRefs:
+    - name: {{ $.Values.traefik.gateway }}
+      namespace: {{ $.Values.traefik.namespace }}
+      sectionName: {{ $.Values.traefik.listener }}
+  hostnames:
+    - {{ .host }}.{{ $.Values.tailnet }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /oauth2
+      backendRefs:
+        - name: {{ $.Release.Name }}
+          port: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: oauth2-proxy-auth
+      backendRefs:
+        - name: {{ .service }}
+          namespace: {{ .namespace }}
+          port: {{ .port }}
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: oauth2-proxy-{{ .host }}
+  namespace: {{ .namespace }}
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: {{ $.Release.Namespace }}
+  to:
+    - group: ""
+      kind: Service
+      name: {{ .service }}
+{{- end }}

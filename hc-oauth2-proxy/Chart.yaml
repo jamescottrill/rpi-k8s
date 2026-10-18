@@ -1,0 +1,8 @@
+apiVersion: v2
+name: hc-oauth2-proxy
+description: Single sign-on in front of apps without built-in OIDC. Tailnet traffic for each protected app goes through Traefik, which checks every request with oauth2-proxy (Keycloak) before forwarding it.
+version: 0.1.0
+dependencies:
+  - name: oauth2-proxy
+    version: 10.7.1
+    repository: https://oauth2-proxy.github.io/manifests

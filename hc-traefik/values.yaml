@@ -19,6 +19,12 @@ traefik:
         certificateRefs:
           - name: wildcard-home-dev-tls
             namespace: kube-system
+      tailnet:
+        namespacePolicy:
+          from: All
+        port: 8000
+        protocol: HTTP
+        hostname: "*.panga-degree.ts.net"
       dns-tcp:
         namespacePolicy:
           from: All
@@ -65,6 +71,12 @@ traefik:
         metrics: true
         tracing: true
         traceVerbosity: detailed
+    tailnet:
+      port: 8000
+      exposedPort: 8000
+      expose:
+        default: true
+      protocol: TCP
     dns-tcp:
       port: 53
 #    dns-udp:
