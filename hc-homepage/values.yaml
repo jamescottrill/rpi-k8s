@@ -1,0 +1,66 @@
+homepage:
+  enableRbac: true
+  serviceAccount:
+    create: true
+  env:
+    - name: HOMEPAGE_ALLOWED_HOSTS
+      value: home.panga-degree.ts.net
+  ingress:
+    main:
+      enabled: false
+  resources:
+    requests:
+      memory: 64Mi
+      cpu: 10m
+    limits:
+      memory: 256Mi
+      cpu: 250m
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist
+  config:
+    kubernetes:
+      mode: cluster
+      ingress: true
+    services: []
+    bookmarks: []
+    widgets:
+      - kubernetes:
+          cluster:
+            show: true
+            cpu: true
+            memory: true
+            showLabel: true
+            label: rpi cluster
+          nodes:
+            show: true
+            cpu: true
+            memory: true
+            showLabel: true
+      - datetime:
+          text_size: md
+          format:
+            dateStyle: long
+            timeStyle: short
+    settingsString: |
+      title: Home
+      theme: dark
+      color: slate
+      headerStyle: clean
+      layout:
+        Platform:
+          style: row
+          columns: 3
+        Data:
+          style: row
+          columns: 3
+        Home:
+          style: row
+          columns: 3
+        Apps:
+          style: row
+          columns: 3

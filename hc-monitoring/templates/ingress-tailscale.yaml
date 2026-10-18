@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Grafana"
+    gethomepage.dev/group: "Platform"
+    gethomepage.dev/icon: "grafana.png"
+    gethomepage.dev/description: "Metrics and dashboards"
+    gethomepage.dev/href: "https://grafana.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app.kubernetes.io/instance=hc-monitoring,app.kubernetes.io/name=grafana"
 spec:
   ingressClassName: tailscale
   defaultBackend:

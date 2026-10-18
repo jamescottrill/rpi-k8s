@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Kubernetes Dashboard"
+    gethomepage.dev/group: "Platform"
+    gethomepage.dev/icon: "kubernetes-dashboard.png"
+    gethomepage.dev/description: "Cluster UI"
+    gethomepage.dev/href: "https://dashboard.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app.kubernetes.io/component=app,app.kubernetes.io/instance=dashboard,app.kubernetes.io/name=kong"
 spec:
   ingressClassName: tailscale
   defaultBackend:

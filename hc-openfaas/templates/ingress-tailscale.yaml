@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "OpenFaaS"
+    gethomepage.dev/group: "Apps"
+    gethomepage.dev/icon: "openfaas.png"
+    gethomepage.dev/description: "Serverless functions"
+    gethomepage.dev/href: "https://openfaas.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app=gateway"
 spec:
   ingressClassName: tailscale
   defaultBackend:

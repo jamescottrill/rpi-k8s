@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Registry"
+    gethomepage.dev/group: "Platform"
+    gethomepage.dev/icon: "docker.png"
+    gethomepage.dev/description: "Container registry"
+    gethomepage.dev/href: "https://docker.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app=docker-registry"
 spec:
   ingressClassName: tailscale
   defaultBackend:

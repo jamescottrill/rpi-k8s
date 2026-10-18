@@ -1,0 +1,8 @@
+apiVersion: v2
+name: hc-homepage
+description: App directory at home.panga-degree.ts.net. Tiles are discovered from gethomepage.dev annotations on each app's Tailscale Ingress.
+version: 0.1.0
+dependencies:
+  - name: homepage
+    version: 2.1.0
+    repository: https://jameswynn.github.io/helm-charts

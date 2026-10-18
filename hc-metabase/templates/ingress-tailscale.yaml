@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Metabase"
+    gethomepage.dev/group: "Data"
+    gethomepage.dev/icon: "metabase.png"
+    gethomepage.dev/description: "BI dashboards"
+    gethomepage.dev/href: "https://metabase.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app=metabase,release=hc-metabase"
 spec:
   ingressClassName: tailscale
   defaultBackend:

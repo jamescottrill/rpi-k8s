@@ -8,6 +8,13 @@ metadata:
     {{- include "openclaw.labels" . | nindent 4 }}
   annotations:
     tailscale.com/proxy-group: {{ .Values.tailscale.proxyGroup }}
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "OpenClaw"
+    gethomepage.dev/group: "Apps"
+    gethomepage.dev/icon: "mdi-robot"
+    gethomepage.dev/description: "AI agent"
+    gethomepage.dev/href: "https://openclaw.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app.kubernetes.io/instance=openclaw,app.kubernetes.io/name=openclaw"
 spec:
   ingressClassName: tailscale
   defaultBackend:

@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Trino"
+    gethomepage.dev/group: "Data"
+    gethomepage.dev/icon: "trino.png"
+    gethomepage.dev/description: "SQL query engine"
+    gethomepage.dev/href: "https://trino.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app.kubernetes.io/component=coordinator,app.kubernetes.io/instance=hc-trino,app.kubernetes.io/name=trino"
 spec:
   ingressClassName: tailscale
   defaultBackend:

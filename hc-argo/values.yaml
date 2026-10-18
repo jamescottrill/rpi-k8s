@@ -20,6 +20,13 @@ argo-cd:
         namespace: argo
         annotations:
           tailscale.com/proxy-group: ingress-proxies
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: "Argo CD"
+          gethomepage.dev/group: "Platform"
+          gethomepage.dev/icon: "argo-cd.png"
+          gethomepage.dev/description: "GitOps deployments"
+          gethomepage.dev/href: "https://argocd.panga-degree.ts.net"
+          gethomepage.dev/pod-selector: "app.kubernetes.io/instance=hc-argo,app.kubernetes.io/name=argocd-server"
       spec:
         ingressClassName: tailscale
         defaultBackend:

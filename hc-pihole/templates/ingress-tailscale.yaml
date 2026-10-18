@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Pi-hole"
+    gethomepage.dev/group: "Home"
+    gethomepage.dev/icon: "pi-hole.png"
+    gethomepage.dev/description: "DNS and ad blocking"
+    gethomepage.dev/href: "https://pihole.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app=pihole"
 spec:
   ingressClassName: tailscale
   defaultBackend:

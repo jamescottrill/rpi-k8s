@@ -6,6 +6,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "Nessie"
+    gethomepage.dev/group: "Data"
+    gethomepage.dev/icon: "mdi-source-branch"
+    gethomepage.dev/description: "Iceberg catalog"
+    gethomepage.dev/href: "https://nessie.panga-degree.ts.net"
+    gethomepage.dev/pod-selector: "app.kubernetes.io/instance=hc-nessie,app.kubernetes.io/name=nessie"
 spec:
   ingressClassName: tailscale
   defaultBackend:
