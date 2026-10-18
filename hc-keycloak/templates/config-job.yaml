@@ -60,9 +60,13 @@ spec:
               $K add-roles -r master --uusername "service-account-$OPERATOR_CLIENT_ID" --rolename admin
 
               # Look up an id by name in kcadm's "id,name" CSV output (the image has no awk).
+              # Uses `if`, not `&&`: under `bash -e` a final non-matching `[ ] && echo` makes the loop
+              # return 1, which silently aborted the script at `admins_id=$(...)`.
               id_for() {
                 local want=$1 id name
-                while IFS=, read -r id name; do [ "$name" = "$want" ] && echo "$id"; done
+                while IFS=, read -r id name; do
+                  if [ "$name" = "$want" ]; then echo "$id"; fi
+                done
               }
 
               for group in admins users; do
