@@ -2,7 +2,7 @@
 - hosts: all
   become: yes
   vars_files:
-    - vars.yml
+    - vars.yaml
   roles:
     - role: common
       tags: common
@@ -11,7 +11,7 @@
 - hosts: master
   become: yes
   vars_files:
-  - vars.yml
+  - vars.yaml
   roles:
     - role: master
       tags: k3s
@@ -19,7 +19,7 @@
 - hosts: k3snodes
   become: yes
   vars_files:
-    - vars.yml
+    - vars.yaml
   roles:
     - role: worker
       tags: k3s

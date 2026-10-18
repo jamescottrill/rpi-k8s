@@ -1,0 +1,7 @@
+# Managed by Ansible (roles/master). Changes here restart k3s.
+disable:
+{% for component in disable_components.split(',') %}
+  - {{ component }}
+{% endfor %}
+node-taint:
+  - {{ master_node_taint }}
