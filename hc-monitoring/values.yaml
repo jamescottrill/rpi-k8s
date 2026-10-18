@@ -15,3 +15,49 @@ kube-prometheus-stack:
         hostnames:
           - grafana.home.internal
           - grafana.home.dev
+  kubeApiServer:
+    serviceMonitor:
+      metricRelabelings:
+        - action: drop
+          regex: apiserver_request_duration_seconds_bucket;(0.15|0.2|0.3|0.35|0.4|0.45|0.6|0.7|0.8|0.9|1.25|1.5|1.75|2|3|3.5|4|4.5|6|7|8|9|15|25|40|50)
+          sourceLabels:
+            - __name__
+            - le
+        - action: drop
+          regex: (apiserver_request_sli_duration_seconds|apiserver_request_body_size_bytes|apiserver_response_sizes|apiserver_watch_cache_read_wait_seconds|apiserver_watch_events_sizes|apiserver_watch_list_duration_seconds|etcd_request_duration_seconds|workqueue_queue_duration_seconds|workqueue_work_duration_seconds)_bucket
+          sourceLabels:
+            - __name__
+  kubelet:
+    serviceMonitor:
+      metricRelabelings:
+        - action: drop
+          regex: (apiserver|etcd|workqueue|scheduler|storage_operation)_.+_bucket
+          sourceLabels:
+            - __name__
+  prometheus:
+    prometheusSpec:
+      retention: 7d
+      retentionSize: 8GB
+      resources:
+        requests:
+          memory: 1Gi
+          cpu: 200m
+        limits:
+          memory: 2Gi
+          cpu: 1500m
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 10Gi
