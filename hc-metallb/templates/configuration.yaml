@@ -7,6 +7,10 @@ metadata:
 spec:
   ipAddressPools:
     - address-pool
+  {{- /* ARP replies from the Wi-Fi node don't reach the LAN reliably, so only wired nodes announce. */}}
+  nodeSelectors:
+    - matchLabels:
+        network: ethernet
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
