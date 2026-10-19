@@ -1,3 +1,6 @@
+image:
+  repository: homebridge/homebridge
+  tag: "2026-10-16"
 gateway:
   name: traefik-gateway
   namespace: kube-system
