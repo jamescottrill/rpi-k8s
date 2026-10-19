@@ -7,6 +7,9 @@ metadata:
     app: homebridge
 spec:
   replicas: 1
+  {{- /* hostNetwork pinned to one node: a rolling update's new pod could never bind the old pod's ports. */}}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: homebridge
@@ -20,8 +23,8 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: homebridge
-          image: homebridge/homebridge:latest
-          imagePullPolicy: Always
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8581
           resources:
