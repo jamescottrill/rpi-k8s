@@ -1,10 +1,12 @@
 {{- range $app := .Values.protectedApps }}
+{{- /* Either a single service/port, or a routes list of {path, service, port} for apps split across services. */}}
+{{- $routes := $app.routes | default (list (dict "path" "/" "service" $app.service "port" $app.port)) }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   {{- /* A Tailscale Ingress can only target a Service in its own namespace, so it lives with Traefik. */}}
-  name: {{ .host }}-tailscale
+  name: {{ $app.host }}-tailscale
   namespace: {{ $.Values.traefik.namespace }}
   annotations:
     tailscale.com/proxy-group: ingress-proxies
@@ -24,12 +26,12 @@ spec:
         number: {{ $.Values.traefik.port }}
   tls:
     - hosts:
-        - {{ .host }}
+        - {{ $app.host }}
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ .host }}
+  name: {{ $app.host }}
   namespace: {{ $.Release.Namespace }}
 spec:
   parentRefs:
@@ -37,7 +39,7 @@ spec:
       namespace: {{ $.Values.traefik.namespace }}
       sectionName: {{ $.Values.traefik.listener }}
   hostnames:
-    - {{ .host }}.{{ $.Values.tailnet }}
+    - {{ $app.host }}.{{ $.Values.tailnet }}
   rules:
     - matches:
         - path:
@@ -46,10 +48,11 @@ spec:
       backendRefs:
         - name: {{ $.Release.Name }}
           port: 80
+    {{- range $routes }}
     - matches:
         - path:
             type: PathPrefix
-            value: /
+            value: {{ .path }}
       filters:
         - type: ExtensionRef
           extensionRef:
@@ -58,21 +61,26 @@ spec:
             name: oauth2-proxy-auth
       backendRefs:
         - name: {{ .service }}
-          namespace: {{ .namespace }}
+          namespace: {{ $app.namespace }}
           port: {{ .port }}
+    {{- end }}
 ---
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:
-  name: oauth2-proxy-{{ .host }}
-  namespace: {{ .namespace }}
+  name: oauth2-proxy-{{ $app.host }}
+  namespace: {{ $app.namespace }}
 spec:
   from:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       namespace: {{ $.Release.Namespace }}
   to:
+    {{- $services := list }}
+    {{- range $routes }}{{ $services = append $services .service }}{{ end }}
+    {{- range $svc := $services | uniq }}
     - group: ""
       kind: Service
-      name: {{ .service }}
+      name: {{ $svc }}
+    {{- end }}
 {{- end }}

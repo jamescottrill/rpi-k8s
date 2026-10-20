@@ -12,6 +12,103 @@ protectedApps:
     namespace: homepage
     service: hc-homepage
     port: 3000
+  - host: dashboard
+    namespace: kubernetes-dashboard
+    routes:
+      - path: /api/v1/csrf/token
+        service: dashboard-kubernetes-dashboard-auth
+        port: 8000
+      - path: /api/v1/login
+        service: dashboard-kubernetes-dashboard-auth
+        port: 8000
+      - path: /api/v1/me
+        service: dashboard-kubernetes-dashboard-auth
+        port: 8000
+      - path: /api
+        service: dashboard-kubernetes-dashboard-api
+        port: 8000
+      - path: /metrics
+        service: dashboard-kubernetes-dashboard-api
+        port: 8000
+      - path: /
+        service: dashboard-kubernetes-dashboard-web
+        port: 8000
+    homepage:
+      name: Kubernetes Dashboard
+      group: Platform
+      icon: kubernetes-dashboard.png
+      description: Cluster UI
+      pod-selector: app.kubernetes.io/component=app,app.kubernetes.io/instance=dashboard,app.kubernetes.io/name=kong
+  - host: longhorn
+    namespace: longhorn-system
+    service: longhorn-frontend
+    port: 80
+    homepage:
+      name: Longhorn
+      group: Platform
+      icon: longhorn.png
+      description: Block storage
+      pod-selector: app=longhorn-ui
+  - host: pihole
+    namespace: pihole
+    service: pihole-web
+    port: 80
+    homepage:
+      name: Pi-hole
+      group: Home
+      icon: pi-hole.png
+      description: DNS and ad blocking
+      pod-selector: app=pihole
+  - host: homebridge
+    namespace: homebridge
+    service: homebridge-web
+    port: 8581
+    homepage:
+      name: Homebridge
+      group: Home
+      icon: homebridge.png
+      description: HomeKit bridge
+      pod-selector: app=homebridge
+  - host: spiderfoot
+    namespace: spiderfoot
+    service: spiderfoot-svc
+    port: 5001
+    homepage:
+      name: SpiderFoot
+      group: Apps
+      icon: mdi-spider
+      description: OSINT scanner
+      pod-selector: app=spiderfoot
+  - host: openfaas
+    namespace: openfaas
+    service: gateway
+    port: 8080
+    homepage:
+      name: OpenFaaS
+      group: Apps
+      icon: openfaas.png
+      description: Serverless functions
+      pod-selector: app=gateway
+  - host: metabase
+    namespace: metabase
+    service: hc-metabase
+    port: 80
+    homepage:
+      name: Metabase
+      group: Data
+      icon: metabase.png
+      description: BI dashboards
+      pod-selector: app=metabase,release=hc-metabase
+  - host: trino
+    namespace: trino
+    service: hc-trino-trino
+    port: 8080
+    homepage:
+      name: Trino
+      group: Data
+      icon: trino.png
+      description: SQL query engine
+      pod-selector: app.kubernetes.io/component=coordinator,app.kubernetes.io/instance=hc-trino,app.kubernetes.io/name=trino
 
 oauth2-proxy:
   config:
