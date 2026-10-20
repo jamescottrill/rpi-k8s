@@ -8,22 +8,64 @@
       - curl
       - apt-transport-https
       - ca-certificates
-      - watchdog
     state: present
     update_cache: yes
-- name: update systemd conf
-  ansible.builtin.lineinfile:
-    path: /etc/systemd/system.conf
-    regexp: ^RuntimeWatchdogSec=
-    line: RuntimeWatchdogSec=15
-- name: update systemd conf
-  ansible.builtin.lineinfile:
-    path: /etc/systemd/system.conf
-    regexp: ^RuntimeWatchdogSec=
-    line: RebootWatchdogSec=2min
-- name: system reload
+
+# Layer 1: systemd pets the hardware watchdog; if the kernel or systemd hangs for
+# RuntimeWatchdogSec, the SoC resets the Pi. Replaces two lineinfile tasks that shared a
+# regexp, so the second overwrote RuntimeWatchdogSec and the watchdog was never armed.
+- name: Check the hardware watchdog device exists
+  ansible.builtin.stat:
+    path: /dev/watchdog0
+  register: watchdog_device
+  tags: watchdog
+- name: Fail if there is no hardware watchdog
+  ansible.builtin.assert:
+    that: watchdog_device.stat.exists
+    fail_msg: /dev/watchdog0 not found; the hardware watchdog cannot be armed on this host
+  tags: watchdog
+- name: Gather service facts
+  ansible.builtin.service_facts:
+  tags: watchdog
+- name: Stop the standalone watchdog daemon, which would hold the device instead of systemd
   ansible.builtin.systemd_service:
+    name: watchdog
+    state: stopped
+    enabled: false
+  when: "'watchdog.service' in ansible_facts.services"
+  tags: watchdog
+- name: Configure the systemd hardware watchdog
+  ansible.builtin.template:
+    src: watchdog.conf.j2
+    dest: /etc/systemd/system.conf.d/10-watchdog.conf
+    mode: '0644'
+  notify: Re-execute systemd
+  tags: watchdog
+
+# Layer 2: reboot if k3s stays unhealthy while the OS is otherwise alive.
+- name: Install the k3s health check
+  ansible.builtin.copy:
+    src: k3s_health_reboot.py
+    dest: /usr/local/sbin/k3s-health-reboot
+    mode: '0755'
+  tags: watchdog
+- name: Install the k3s health check service and timer
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    mode: '0644'
+  loop:
+    - k3s-health-reboot.service
+    - k3s-health-reboot.timer
+  notify: Reload systemd units
+  tags: watchdog
+- name: Enable the k3s health check timer
+  ansible.builtin.systemd_service:
+    name: k3s-health-reboot.timer
+    enabled: true
+    state: started
     daemon_reload: true
+  tags: watchdog
 - name: Make k3s directory
   file:
     path: /etc/rancher/k3s

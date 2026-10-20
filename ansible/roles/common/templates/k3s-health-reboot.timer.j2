@@ -1,0 +1,11 @@
+# Managed by Ansible (roles/common).
+[Unit]
+Description=Check k3s health every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target
