@@ -1,0 +1,8 @@
+# Managed by Ansible (roles/common).
+[Unit]
+Description=Reboot the node if k3s stays unhealthy
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/sbin/k3s-health-reboot --threshold {{ k3s_health_failure_threshold }} --boot-grace {{ k3s_health_boot_grace_sec }} --min-interval {{ k3s_health_min_reboot_interval_sec }}{% if inventory_hostname in groups['master'] %} --check-apiserver{% endif %}
