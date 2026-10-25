@@ -1,0 +1,5 @@
+# Credentials: these live in Vault and must not be committed
+/config.json
+/cloudflare.yaml
+hc-docker-registry/auth.json
+hc-docker-registry/htpasswd

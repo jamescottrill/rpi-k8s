@@ -11,3 +11,11 @@ watchdog_reboot_timeout: 2min
 k3s_health_failure_threshold: 5
 k3s_health_boot_grace_sec: 900
 k3s_health_min_reboot_interval_sec: 3600
+# Private registry hosts on the LAN, and the ESO-synced Secret holding their credentials.
+kube_context: rpi
+registry_hosts:
+  - docker.home.dev
+  - docker.home.internal
+registry_credentials_secret:
+  namespace: docker-registry
+  name: regcred
