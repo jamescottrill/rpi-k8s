@@ -3,3 +3,6 @@
 /cloudflare.yaml
 hc-docker-registry/auth.json
 hc-docker-registry/htpasswd
+*.pfx
+*.key
+regcred.yaml
