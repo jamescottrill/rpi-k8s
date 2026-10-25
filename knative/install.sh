@@ -6,7 +6,6 @@ kubectl patch configmap/config-network \
   --type merge \
   --patch '{"data":{"ingress-class":"kourier.ingress.networking.knative.dev"}}'
 kubectl apply -f config-defaults.yaml
-kubectl create secret docker-registry regcred --docker-server=docker.home.internal --docker-username=a5QxbI0ZmTh --docker-password=b2ojjtF%7rKHJcpI
 kubectl create secret generic custom-certs \
 --namespace knative-serving \
 --from-file=lab.cloud.crt

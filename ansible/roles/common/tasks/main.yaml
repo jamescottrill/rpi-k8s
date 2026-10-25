@@ -88,8 +88,36 @@
     state: directory
     mode: '0755'
 
+# Registry credentials live in Vault (secret/docker-registry/regcred); ESO syncs them to the
+# regcred Secret, which is read here through the kube context rather than kept in git.
+- name: Read the registry credentials synced from Vault
+  kubernetes.core.k8s_info:
+    context: "{{ kube_context }}"
+    kind: Secret
+    namespace: "{{ registry_credentials_secret.namespace }}"
+    name: "{{ registry_credentials_secret.name }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+  register: regcred
+  no_log: true
+  tags: registries
+# Before the cluster (and so the Secret) exists, leave registries.yaml alone rather than fail
+- name: Warn when the registry credentials are not available yet
+  ansible.builtin.debug:
+    msg: "{{ registry_credentials_secret.namespace }}/{{ registry_credentials_secret.name }} not found; skipping registries.yaml"
+  when: regcred.resources | length == 0
+  run_once: true
+  tags: registries
 - name: Create registries.yaml file
-  template:
+  ansible.builtin.template:
     src: templates/registries.yaml.j2
     dest: /etc/rancher/k3s/registries.yaml
+    mode: '0600'
+  vars:
+    registry_auth: "{{ (regcred.resources[0].data['.dockerconfigjson'] | b64decode | from_json).auths[registry_hosts[0]] }}"
+  when: regcred.resources | length > 0
+  # The diff would show the password
+  diff: false
+  notify: Restart k3s
   tags: registries
