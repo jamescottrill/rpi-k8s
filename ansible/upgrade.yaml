@@ -13,10 +13,12 @@
       shell: cat /var/lib/rancher/k3s/server/node-token
       register: node_token
       changed_when: false
+      no_log: true
 
     - name: Set fact for node token
       set_fact:
         k3s_token: "{{ node_token.stdout }}"
+      no_log: true
 
 - name: Upgrade master node
   hosts: master

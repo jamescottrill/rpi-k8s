@@ -1,0 +1,136 @@
+---
+# Rotate the k3s server token, which agents also use to join.
+#   ansible-playbook -i host.ini rotate-k3s-token.yaml -e rotate_k3s_token=yes
+#
+# `k3s token rotate` without --new-token makes the server generate the new token, rewrite
+# /var/lib/rancher/k3s/server/token and re-encrypt the bootstrap data, so the secret never
+# appears on a command line. Running agents keep working on their existing certificates, but
+# need the new token before their next restart, so each one is updated and restarted in turn.
+# Restarting k3s or k3s-agent does not stop running pods.
+#
+# Old datastore backups need the old token to restore, so it is kept next to the backup.
+#
+# The agent half is safe to re-run on its own, e.g. after a failure part-way through:
+#   ansible-playbook -i host.ini rotate-k3s-token.yaml --tags agents
+
+- name: Rotate the token on the server
+  hosts: master
+  become: yes
+  gather_facts: no
+  tags: rotate
+  tasks:
+    - name: Refuse to run unless asked explicitly, as every run rotates the token again
+      ansible.builtin.assert:
+        that: rotate_k3s_token | default('no') == 'yes'
+        fail_msg: Pass -e rotate_k3s_token=yes to rotate the k3s token
+
+    # set_fact fixes the timestamp once; a templated var would be re-evaluated per task
+    - name: Choose the backup directory
+      ansible.builtin.set_fact:
+        backup_dir: "/var/lib/rancher/k3s/server/backup/token-rotate-{{ lookup('pipe', 'date -u +%Y%m%dT%H%M%SZ') }}"
+
+    - name: Create the backup directory
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: '0700'
+
+    # The SQLite online backup API gives a consistent copy while k3s is writing
+    - name: Back up the datastore
+      ansible.builtin.command:
+        argv:
+          - python3
+          - -c
+          - |
+            import sqlite3, sys
+            src = sqlite3.connect("file:/var/lib/rancher/k3s/server/db/state.db?mode=ro", uri=True)
+            dst = sqlite3.connect(sys.argv[1])
+            src.backup(dst)
+            dst.close()
+          - "{{ backup_dir }}/state.db"
+        creates: "{{ backup_dir }}/state.db"
+
+    - name: Back up the old token and credentials file
+      ansible.builtin.copy:
+        src: "/var/lib/rancher/k3s/server/{{ item }}"
+        dest: "{{ backup_dir }}/{{ item | basename }}"
+        remote_src: yes
+        mode: '0600'
+      loop:
+        - token
+        - cred/passwd
+
+    - name: Rotate the token
+      ansible.builtin.command: k3s token rotate
+      changed_when: true
+
+    - name: Restart k3s so the server uses the new token
+      ansible.builtin.systemd_service:
+        name: k3s
+        state: restarted
+
+    - name: Wait for the API server to be ready
+      ansible.builtin.command: k3s kubectl get --raw=/readyz
+      register: readyz
+      until: readyz.rc == 0
+      retries: 30
+      delay: 10
+      changed_when: false
+
+- name: Give each agent the new token
+  hosts: k3snodes
+  become: yes
+  gather_facts: no
+  serial: 1
+  tags: agents
+  vars:
+    master_host: "{{ groups['master'][0] }}"
+  tasks:
+    - name: Read the current token from the server
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/token
+      delegate_to: "{{ master_host }}"
+      register: server_token
+      no_log: true
+
+    - name: Write the token into the agent's environment file
+      ansible.builtin.lineinfile:
+        path: /etc/systemd/system/k3s-agent.service.env
+        regexp: '^K3S_TOKEN='
+        line: "K3S_TOKEN='{{ server_token.content | b64decode | trim }}'"
+      register: agent_env
+      no_log: true
+
+    - name: Restart the agent
+      ansible.builtin.systemd_service:
+        name: k3s-agent
+        state: restarted
+        daemon_reload: true
+      when: agent_env.changed
+
+    # A dead agent still shows Ready for ~40s, so check the kubelet it starts locally too
+    - name: Wait for the kubelet to come back
+      ansible.builtin.uri:
+        url: http://127.0.0.1:10248/healthz
+      register: kubelet
+      until: kubelet.status == 200
+      retries: 30
+      delay: 10
+
+    # argv, because the command module's shell-style splitting strips the quotes jsonpath needs
+    - name: Wait for the node to be Ready again
+      ansible.builtin.command:
+        argv:
+          - k3s
+          - kubectl
+          - get
+          - node
+          - "{{ inventory_hostname }}"
+          - -o
+          - 'jsonpath={.status.conditions[?(@.type=="Ready")].status}'
+      delegate_to: "{{ master_host }}"
+      register: node_ready
+      until: node_ready.stdout == "True"
+      retries: 30
+      delay: 10
+      changed_when: false
