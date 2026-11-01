@@ -1,0 +1,28 @@
+image:
+  repository: binwiederhier/ntfy
+  tag: v2.36.0
+tailnet: panga-degree.ts.net
+# Tailscale ingress host name: the server is reachable at https://<hostname>.<tailnet>
+hostname: ntfy
+storage:
+  storageClass: longhorn
+  size: 1Gi
+# How long messages stay in the cache, so a phone that was offline can catch up
+cacheDuration: 24h
+# Vault KV path (mount "secret") holding the provisioned users and tokens.
+# Properties:
+#   users  — comma-separated "<name>:<bcrypt hash>:<role>" entries (`ntfy user hash`)
+#   tokens — comma-separated "<name>:<tk_ token>:<label>" entries (`ntfy token generate`)
+vault:
+  authKey: ntfy/auth
+# Access control entries ("<user>:<topic pattern>:<access>"). Everything else is denied.
+# Admins (such as the phone's user) have full access and need no entry here.
+access:
+  - "agentdeck-relay:agentdeck:wo"
+resources:
+  requests:
+    memory: 32Mi
+    cpu: 10m
+  limits:
+    memory: 128Mi
+    cpu: 250m

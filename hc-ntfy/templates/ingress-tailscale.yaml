@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ntfy-tailscale
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    tailscale.com/proxy-group: ingress-proxies
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: "ntfy"
+    gethomepage.dev/group: "Platform"
+    gethomepage.dev/icon: "ntfy.png"
+    gethomepage.dev/description: "Push notifications"
+    gethomepage.dev/href: "https://{{ .Values.hostname }}.{{ .Values.tailnet }}"
+    gethomepage.dev/pod-selector: "app=ntfy"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: ntfy
+      port:
+        number: 80
+  tls:
+    - hosts:
+        - {{ .Values.hostname }}
