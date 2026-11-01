@@ -1,0 +1,25 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ntfy-config
+  namespace: {{ .Release.Namespace }}
+data:
+  server.yml: |
+    base-url: "https://{{ .Values.hostname }}.{{ .Values.tailnet }}"
+    listen-http: ":8080"
+    # The Tailscale ingress proxies requests, so take the client address from X-Forwarded-For
+    behind-proxy: true
+    cache-file: /var/lib/ntfy/cache.db
+    cache-duration: "{{ .Values.cacheDuration }}"
+    auth-file: /var/lib/ntfy/user.db
+    auth-default-access: deny-all
+    enable-login: true
+    # iOS can only be woken through ntfy.sh's APNs credentials. Only a poll request
+    # (hashed topic and message ID) goes upstream; the phone fetches the message from here.
+    upstream-base-url: "https://ntfy.sh"
+    # Users and tokens come from Vault through NTFY_AUTH_USERS / NTFY_AUTH_TOKENS
+    auth-access:
+      {{- range .Values.access }}
+      - {{ . | quote }}
+      {{- end }}
