@@ -1,4 +1,9 @@
 traefik:
+  # Pin the MetalLB address so the Gateway keeps 192.168.0.240 (which DNS
+  # points at) rather than taking whichever pool address is free.
+  service:
+    annotations:
+      metallb.io/loadBalancerIPs: 192.168.0.240
   providers:
     kubernetesIngress:
       enabled: false
@@ -18,7 +23,7 @@ traefik:
         protocol: HTTPS
         certificateRefs:
           - name: wildcard-home-dev-tls
-            namespace: kube-system
+            namespace: traefik
       tailnet:
         namespacePolicy:
           from: All
@@ -87,4 +92,4 @@ traefik:
 
 gateway:
   name: traefik-gateway
-  namespace: kube-system
+  namespace: traefik

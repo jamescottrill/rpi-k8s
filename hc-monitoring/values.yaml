@@ -30,7 +30,7 @@ kube-prometheus-stack:
         enabled: true
         parentRefs:
           - name: traefik-gateway
-            namespace: kube-system
+            namespace: traefik
             sectionName: websecure
         hostnames:
           - grafana.home.internal

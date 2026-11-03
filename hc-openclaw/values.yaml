@@ -73,7 +73,7 @@ tailscale:
 # -- Gateway reference (Traefik)
 gateway:
   name: traefik-gateway
-  namespace: kube-system
+  namespace: traefik
 
 # -- Service account configuration
 serviceAccount:

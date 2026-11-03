@@ -1,2 +1,2 @@
 releaseName: hc-traefik
-namespace: kube-system
+namespace: traefik
