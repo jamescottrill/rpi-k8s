@@ -1,5 +1,5 @@
 install:
-	helm upgrade --install hc-traefik . -n kube-system --create-namespace
+	helm upgrade --install hc-traefik . -n traefik --create-namespace
 uninstall:
-	helm uninstall hc-traefik -n kube-system
+	helm uninstall hc-traefik -n traefik
 

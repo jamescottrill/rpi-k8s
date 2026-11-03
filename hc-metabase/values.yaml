@@ -1,6 +1,6 @@
 gateway:
   name: traefik-gateway
-  namespace: kube-system
+  namespace: traefik
 metabase:
   javaOpts: "-Xmx1536m -Xms512m"
   extraEnv:

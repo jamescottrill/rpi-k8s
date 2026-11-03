@@ -1,7 +1,7 @@
 tailnet: panga-degree.ts.net
 
 traefik:
-  namespace: kube-system
+  namespace: traefik
   service: hc-traefik
   gateway: traefik-gateway
   listener: tailnet

@@ -2,7 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: wildcard-home-dev
-  namespace: kube-system
+  namespace: {{ .Release.Namespace }}
 spec:
   secretName: wildcard-home-dev-tls
   duration: 8760h

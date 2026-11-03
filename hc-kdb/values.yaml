@@ -1,5 +1,5 @@
 gateway:
   name: traefik-gateway
-  namespace: kube-system
+  namespace: traefik
 serviceAccount:
   name: sa-kdb
