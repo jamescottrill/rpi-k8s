@@ -9,9 +9,11 @@ vendor:
 	# Keep the operator off the control-plane node, which has no spare memory, and give the JVM
 	# up to ~5 minutes to start: the upstream 35s startup-probe budget is too short on a Pi.
 	# The upstream 700m CPU limit throttled ~88% of periods at startup, starving the event loop
-	# until API connections timed out; allow bursts to 2 cores (the request is unchanged).
+	# until API connections timed out, so drop the CPU limit entirely. Request 50m: 7-day p99
+	# use is ~2m (Nov 2026), and the upstream 300m request wasted schedulable CPU.
 	curl -sfL $(BASE)/kubernetes.yml \
 		| yq 'select(.kind == "Deployment").spec.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms = [{"matchExpressions": [{"key": "node-role.kubernetes.io/control-plane", "operator": "DoesNotExist"}]}]' \
 		| yq 'select(.kind == "Deployment").spec.template.spec.containers[0].startupProbe.failureThreshold = 30' \
-		| yq 'select(.kind == "Deployment").spec.template.spec.containers[0].resources.limits.cpu = "2000m"' \
+		| yq 'del(select(.kind == "Deployment").spec.template.spec.containers[0].resources.limits.cpu)' \
+		| yq 'select(.kind == "Deployment").spec.template.spec.containers[0].resources.requests.cpu = "50m"' \
 		> templates/operator.yaml
