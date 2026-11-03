@@ -17,13 +17,15 @@ trino:
         type: Recreate
     jvm:
       maxHeapSize: "2G"
+    # Sized from 7-day peaks (Nov 2026): ~1.35Gi working set, p99 CPU ~11m.
+    # Memory limit must stay above maxHeapSize plus JVM overhead. No CPU
+    # limit, so queries can burst into idle cores.
     resources:
       requests:
-        memory: 1Gi
-        cpu: 250m
+        memory: 1400Mi
+        cpu: 100m
       limits:
         memory: 3Gi
-        cpu: 1500m
 
     startupProbe:
       initialDelaySeconds: 30

@@ -13,13 +13,15 @@ metabase:
       enabled: true
       storageClassName: longhorn
       size: 5Gi
+  # Sized from 7-day peaks (Nov 2026): ~1.3Gi working set, p99 CPU ~55m.
+  # Memory limit must stay above -Xmx plus JVM overhead. No CPU limit, so
+  # JVM start-up is not throttled; the request still sets its fair share.
   resources:
     requests:
-      memory: 768Mi
+      memory: 1400Mi
       cpu: 100m
     limits:
       memory: 2Gi
-      cpu: 1500m
   startupProbe:
     failureThreshold: 180
 

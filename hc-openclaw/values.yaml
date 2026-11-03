@@ -21,18 +21,28 @@ storage:
     # -- Storage class name (leave empty for cluster default)
     storageClassName: ""
 
-# -- Resource limits and requests for the agent pod
-resources: {}
-  # limits:
-  #   cpu: "2"
-  #   memory: 4Gi
-  # requests:
-  #   cpu: "500m"
-  #   memory: 1Gi
+# -- Resource requests and limits for the agent container. Sized from
+# 7-day peaks (Nov 2026): ~1.4Gi working set, p99 CPU ~390m. The operator
+# default (1Gi request, 4Gi limit) under-requested memory and pushed rpi2's
+# memory limits past 100%.
+resources:
+  requests:
+    cpu: 500m
+    memory: 1536Mi
+  limits:
+    memory: 3Gi
 
 # -- Enable Chromium sidecar for browser automation
 chromium:
   enabled: true
+  # -- Chromium sidecar resources. 7-day peak ~400Mi, p99 CPU ~25m
+  # (operator default: 250m/512Mi request, 1 CPU/2Gi limit).
+  resources:
+    requests:
+      cpu: 50m
+      memory: 448Mi
+    limits:
+      memory: 1Gi
 
 # -- Enable automatic updates for the OpenClaw agent
 autoUpdate:
