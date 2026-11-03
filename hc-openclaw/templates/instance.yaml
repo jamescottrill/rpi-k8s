@@ -37,6 +37,10 @@ spec:
   {{- if .Values.chromium.enabled }}
   chromium:
     enabled: true
+    {{- with .Values.chromium.resources }}
+    resources:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
   {{- end }}
   {{- if .Values.autoUpdate.enabled }}
   autoUpdate:

@@ -12,33 +12,6 @@ protectedApps:
     namespace: homepage
     service: hc-homepage
     port: 3000
-  - host: dashboard
-    namespace: kubernetes-dashboard
-    routes:
-      - path: /api/v1/csrf/token
-        service: dashboard-kubernetes-dashboard-auth
-        port: 8000
-      - path: /api/v1/login
-        service: dashboard-kubernetes-dashboard-auth
-        port: 8000
-      - path: /api/v1/me
-        service: dashboard-kubernetes-dashboard-auth
-        port: 8000
-      - path: /api
-        service: dashboard-kubernetes-dashboard-api
-        port: 8000
-      - path: /metrics
-        service: dashboard-kubernetes-dashboard-api
-        port: 8000
-      - path: /
-        service: dashboard-kubernetes-dashboard-web
-        port: 8000
-    homepage:
-      name: Kubernetes Dashboard
-      group: Platform
-      icon: kubernetes-dashboard.png
-      description: Cluster UI
-      pod-selector: app.kubernetes.io/component=app,app.kubernetes.io/instance=dashboard,app.kubernetes.io/name=kong
   - host: longhorn
     namespace: longhorn-system
     service: longhorn-frontend

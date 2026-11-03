@@ -39,13 +39,14 @@ spec:
       - namespaceSelector:
           matchLabels:
             kubernetes.io/metadata.name: {{ .Release.Namespace }}
+  # 7-day peak (Nov 2026): ~660Mi, p99 CPU ~3m. No CPU limit so start-up
+  # and realm imports are not throttled.
   resources:
     requests:
       memory: 768Mi
-      cpu: 200m
+      cpu: 100m
     limits:
       memory: 1536Mi
-      cpu: 2000m
   scheduling:
     affinity:
       nodeAffinity:
