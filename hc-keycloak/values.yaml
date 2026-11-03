@@ -45,7 +45,6 @@ clients:
     redirectUris:
       - https://home.panga-degree.ts.net/oauth2/callback
       - https://longhorn.panga-degree.ts.net/oauth2/callback
-      - https://dashboard.panga-degree.ts.net/oauth2/callback
       - https://pihole.panga-degree.ts.net/oauth2/callback
       - https://homebridge.panga-degree.ts.net/oauth2/callback
       - https://spiderfoot.panga-degree.ts.net/oauth2/callback
