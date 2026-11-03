@@ -1,9 +1,0 @@
-# Argo CD's automated sync refuses to sync an Application to an empty
-# target state (allowEmpty is not set), so render one marker resource to
-# let the prune of the Dashboard's resources go ahead.
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: dashboard-decommissioned
-data:
-  reason: "Kubernetes Dashboard removed; see hc-dashboard/Chart.yaml."
