@@ -22,9 +22,6 @@ metabase:
       cpu: 100m
     limits:
       memory: 2Gi
-  startupProbe:
-    failureThreshold: 180
-
   livenessProbe:
     httpGet:
       path: /api/health
@@ -48,5 +45,28 @@ metabase:
     port: 80
   ingress:
     enabled: false
+  # The chart probes every 5s, so 360 failures gives a 30-minute start-up
+  # budget. A cold start on a busy node took over 15 minutes (Nov 2026).
   startupProbe:
-    failureThreshold: 180
+    failureThreshold: 360
+  # Keep Metabase off rpi5: it is a 1.8 GHz Pi 4 (the others are 2.4 GHz
+  # Pi 5s) and the busiest node. Moving there in Nov 2026 made Metabase
+  # noticeably slower, as its H2 database is on a Longhorn volume and rpi5
+  # also has the highest I/O wait. Prefer wired nodes over rpi4's wifi.
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                  - rpi5
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: network
+                operator: In
+                values:
+                  - ethernet
