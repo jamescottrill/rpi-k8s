@@ -61,7 +61,7 @@ protectedApps:
       group: Apps
       icon: mdi-shield-search
       description: Automated vulnerability scanning and triage
-      pod-selector: app.kubernetes.io/component=dashboard
+      pod-selector: app.kubernetes.io/component=dashboard,app.kubernetes.io/instance=bug-bounty
   - host: openfaas
     namespace: openfaas
     service: gateway
