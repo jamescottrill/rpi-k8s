@@ -58,7 +58,7 @@ protectedApps:
     port: 80
     homepage:
       name: Bug Bounty Scanner
-      group: Security
+      group: Apps
       icon: mdi-shield-search
       description: Automated vulnerability scanning and triage
       pod-selector: app.kubernetes.io/component=dashboard
