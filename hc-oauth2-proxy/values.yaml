@@ -52,6 +52,16 @@ protectedApps:
       icon: mdi-spider
       description: OSINT scanner
       pod-selector: app=spiderfoot
+  - host: bb-scanner
+    namespace: bug-bounty
+    service: bug-bounty-bb-scanner-dashboard
+    port: 80
+    homepage:
+      name: Bug Bounty Scanner
+      group: Security
+      icon: mdi-shield-search
+      description: Automated vulnerability scanning and triage
+      pod-selector: app.kubernetes.io/component=dashboard
   - host: openfaas
     namespace: openfaas
     service: gateway

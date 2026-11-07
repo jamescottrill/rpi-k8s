@@ -48,6 +48,7 @@ clients:
       - https://pihole.panga-degree.ts.net/oauth2/callback
       - https://homebridge.panga-degree.ts.net/oauth2/callback
       - https://spiderfoot.panga-degree.ts.net/oauth2/callback
+      - https://bb-scanner.panga-degree.ts.net/oauth2/callback
       - https://openfaas.panga-degree.ts.net/oauth2/callback
       - https://metabase.panga-degree.ts.net/oauth2/callback
       - https://trino.panga-degree.ts.net/oauth2/callback
