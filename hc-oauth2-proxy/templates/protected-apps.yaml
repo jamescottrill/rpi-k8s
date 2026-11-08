@@ -58,7 +58,7 @@ spec:
           extensionRef:
             group: traefik.io
             kind: Middleware
-            name: oauth2-proxy-auth
+            name: oauth2-proxy-auth-chain
       backendRefs:
         - name: {{ .service }}
           namespace: {{ $app.namespace }}
