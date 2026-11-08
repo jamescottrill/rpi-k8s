@@ -14,3 +14,28 @@ spec:
       - X-Auth-Request-User
       - X-Auth-Request-Email
       - X-Auth-Request-Groups
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: oauth2-proxy-strip-client-auth-headers
+  namespace: {{ .Release.Namespace }}
+spec:
+  headers:
+    # Empty values remove client-supplied identity before forwardAuth adds the
+    # values returned by oauth2-proxy.
+    customRequestHeaders:
+      X-Auth-Request-User: ""
+      X-Auth-Request-Email: ""
+      X-Auth-Request-Groups: ""
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: oauth2-proxy-auth-chain
+  namespace: {{ .Release.Namespace }}
+spec:
+  chain:
+    middlewares:
+      - name: oauth2-proxy-strip-client-auth-headers
+      - name: oauth2-proxy-auth
