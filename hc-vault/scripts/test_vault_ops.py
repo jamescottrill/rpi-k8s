@@ -116,9 +116,11 @@ def test_configure_skips_enabling_existing_mounts(init_file):
         return responses.get(tuple(args[:2]), "")
 
     with mock.patch.object(vault_ops, "vault", side_effect=fake_vault), \
-         mock.patch.object(vault_ops, "configure_oidc") as configure_oidc:
+         mock.patch.object(vault_ops, "configure_oidc") as configure_oidc, \
+         mock.patch.object(vault_ops, "configure_agent") as configure_agent:
         vault_ops.cmd_configure(None)
     configure_oidc.assert_called_once_with("t")
+    configure_agent.assert_called_once_with("t")
     assert ["secrets", "enable", "-path=secret", "kv-v2"] not in calls
     assert ["auth", "enable", "kubernetes"] not in calls
     assert any(c[:2] == ["write", "auth/kubernetes/role/external-secrets"] for c in calls)
@@ -131,6 +133,17 @@ def test_put_secret_sends_values_on_stdin():
     assert args == ["kv", "put", "secret/app/creds", "-"]
     assert "hunter2" not in " ".join(args)
     assert json.loads(vault.call_args.kwargs["stdin"]) == {"password": "hunter2"}
+
+
+def test_configure_agent_limits_the_token_role_to_the_read_policy():
+    with mock.patch.object(vault_ops, "vault") as vault:
+        vault_ops.configure_agent("t")
+    calls = {tuple(c.args[0][:3]): c.kwargs.get("stdin", "") for c in vault.call_args_list}
+    assert 'path "secret/data/agent/*"' in calls[("policy", "write", "agent-read")]
+    role = json.loads(calls[("write", "auth/token/roles/agent", "-")])
+    assert role["allowed_policies"] == ["agent-read"]
+    assert role["orphan"] is True and role["renewable"] is False
+    assert role["token_no_default_policy"] is True
 
 
 class FakeVault:

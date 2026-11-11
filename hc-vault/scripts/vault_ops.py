@@ -49,6 +49,20 @@ path "*" {
   capabilities = ["create", "read", "update", "patch", "delete", "list", "sudo"]
 }
 """
+# Agents (e.g. Claude Code) get short-lived tokens that can only read secret/agent/*, minted
+# from an admin's OIDC login by with_secret.py. The token role makes them orphans with no
+# entity, so the admin's identity-group policies are not inherited.
+AGENT_POLICY = "agent-read"
+AGENT_POLICY_HCL = """\
+path "secret/data/agent/*" {
+  capabilities = ["read"]
+}
+path "secret/metadata/agent/*" {
+  capabilities = ["read", "list"]
+}
+"""
+AGENT_TOKEN_ROLE = "agent"
+AGENT_TOKEN_TTL = "8h"
 # Keycloak group name -> Vault policies granted to its members.
 OIDC_GROUP_POLICIES = {"admins": [ADMIN_POLICY]}
 
@@ -165,7 +179,8 @@ def cmd_configure(_: argparse.Namespace) -> None:
         token=token,
     )
     configure_oidc(token)
-    print("Configured kv-v2 at secret/, kubernetes auth, the external-secrets role and Keycloak OIDC.")
+    configure_agent(token)
+    print("Configured kv-v2 at secret/, kubernetes auth, the external-secrets role, Keycloak OIDC and the agent token role.")
 
 
 def configure_oidc(token: str) -> None:
@@ -212,6 +227,21 @@ def configure_oidc(token: str) -> None:
         if not has_alias:
             vault(["write", "identity/group-alias", f"name={group}", f"mount_accessor={accessor}",
                    f"canonical_id={group_id}"], token=token)
+
+
+def configure_agent(token: str) -> None:
+    """Create the read-only agent policy and the token role that mints agent tokens."""
+    vault(["policy", "write", AGENT_POLICY, "-"], token=token, stdin=AGENT_POLICY_HCL)
+    role = {
+        "allowed_policies": [AGENT_POLICY],
+        "disallowed_policies": [ADMIN_POLICY],
+        "orphan": True,
+        "renewable": False,
+        "token_no_default_policy": True,
+        "token_explicit_max_ttl": AGENT_TOKEN_TTL,
+        "token_type": "service",
+    }
+    vault(["write", f"auth/token/roles/{AGENT_TOKEN_ROLE}", "-"], token=token, stdin=json.dumps(role))
 
 
 def put_secret(path: str, data: dict[str, str], token: str) -> None:

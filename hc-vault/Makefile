@@ -13,3 +13,5 @@ configure:
 	python3 scripts/vault_ops.py configure
 test:
 	python3 -m pytest -q -p no:cacheprovider scripts
+agent-login:
+	python3 scripts/with_secret.py login
