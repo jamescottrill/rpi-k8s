@@ -1,0 +1,11 @@
+apiVersion: v2
+name: hc-kyverno
+description: Kyverno admission controller plus policies aligned to Section 5 of the CIS Kubernetes Benchmark.
+version: 0.1.0
+dependencies:
+  - name: kyverno
+    version: 3.10.0
+    repository: https://kyverno.github.io/kyverno/
+  - name: kyverno-policies
+    version: 3.10.0
+    repository: https://kyverno.github.io/kyverno/

@@ -1,0 +1,21 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: disallow-secrets-in-env
+policies:
+  - ../../templates/policies/disallow-secrets-in-env.yaml
+resources:
+  - resources.yaml
+results:
+  - policy: disallow-secrets-in-env
+    kind: Pod
+    resources: [apps/plain-env]
+    result: pass
+  - policy: disallow-secrets-in-env
+    kind: Pod
+    resources: [apps/secret-key-ref]
+    result: fail
+  - policy: disallow-secrets-in-env
+    kind: Pod
+    resources: [apps/secret-env-from]
+    result: fail

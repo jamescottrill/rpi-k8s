@@ -1,0 +1,44 @@
+apiVersion: policies.kyverno.io/v1
+kind: MutatingPolicy
+metadata:
+  name: add-default-seccomp
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    cis.benchmark/controls: "5.7.2"
+    policies.kyverno.io/title: Default seccomp profile to RuntimeDefault
+    policies.kyverno.io/category: CIS Benchmark (General)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      CIS 5.7.2: Pods that do not choose a seccomp profile are given RuntimeDefault at Pod level. Containers that set their own profile keep it. Only Pods are mutated, never their controllers, so Argo CD sees no drift.
+spec:
+  autogen:
+    podControllers:
+      controllers: []
+  evaluation:
+    background:
+      enabled: false
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE]
+        resources: [pods]
+  matchConditions:
+    - name: seccomp-unset
+      expression: >-
+        !has(object.spec.securityContext) ||
+        !has(object.spec.securityContext.seccompProfile)
+  mutations:
+    - patchType: ApplyConfiguration
+      applyConfiguration:
+        expression: >-
+          Object{
+            spec: Object.spec{
+              securityContext: Object.spec.securityContext{
+                seccompProfile: Object.spec.securityContext.seccompProfile{
+                  type: "RuntimeDefault"
+                }
+              }
+            }
+          }

@@ -1,0 +1,42 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: restrict-image-registries
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    policies.kyverno.io/title: Restrict image registries
+    policies.kyverno.io/category: Supply Chain
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Images may only come from the registries this cluster already relies on: Docker Hub, GHCR, Quay, the Kubernetes and Kyverno registries, Amazon ECR Public and the local docker.home.dev registry.
+spec:
+  validationActions: [Audit]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [pods]
+  variables:
+    - name: allContainers
+      expression: >-
+        object.spec.containers +
+        object.spec.?initContainers.orValue([]) +
+        object.spec.?ephemeralContainers.orValue([])
+    - name: allowedRegistries
+      expression: >-
+        ['docker.io', 'ghcr.io', 'quay.io', 'registry.k8s.io', 'reg.kyverno.io',
+         'public.ecr.aws', 'ecr-public.aws.com', 'docker.home.dev']
+  validations:
+    # An image has an explicit registry only when its first path segment looks
+    # like a host (contains '.' or ':', or is localhost); anything else is a
+    # Docker Hub shorthand such as "redis:7" or "pihole/pihole:2025.01".
+    - expression: >-
+        variables.allContainers.all(c,
+          !c.image.contains('/') ||
+          (!c.image.split('/')[0].contains('.') &&
+           !c.image.split('/')[0].contains(':') &&
+           c.image.split('/')[0] != 'localhost') ||
+          c.image.split('/')[0] in variables.allowedRegistries)
+      message: Images must come from an approved registry.

@@ -1,0 +1,35 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: restrict-wildcard-rbac
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    cis.benchmark/controls: "5.1.3"
+    policies.kyverno.io/title: Restrict wildcards in RBAC roles
+    policies.kyverno.io/category: CIS Benchmark (RBAC)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      CIS 5.1.3: Roles and ClusterRoles should not grant wildcard verbs, resources or API groups. Kubernetes-owned roles (system:*), the built-in user-facing roles and aggregated roles are ignored.
+spec:
+  validationActions: [Audit]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [rbac.authorization.k8s.io]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [clusterroles, roles]
+  matchConditions:
+    - name: skip-system-roles
+      expression: "!object.metadata.name.startsWith('system:')"
+    - name: skip-builtin-roles
+      expression: "!(object.metadata.name in ['cluster-admin', 'admin', 'edit', 'view'])"
+    - name: skip-aggregated-roles
+      expression: "!has(object.aggregationRule)"
+  validations:
+    - expression: >-
+        object.?rules.orValue([]).all(r,
+          !('*' in r.verbs) &&
+          !('*' in r.?resources.orValue([])) &&
+          !('*' in r.?apiGroups.orValue([])))
+      message: RBAC rules should list explicit verbs, resources and API groups instead of '*' (CIS 5.1.3).

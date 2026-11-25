@@ -1,0 +1,24 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: restrict-sa-token-automount
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    cis.benchmark/controls: "5.1.6"
+    policies.kyverno.io/title: Only mount ServiceAccount tokens where needed
+    policies.kyverno.io/category: CIS Benchmark (RBAC)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      CIS 5.1.6: Pods should set automountServiceAccountToken to false unless they talk to the Kubernetes API. Only the Pod field is checked, because a ServiceAccount-level setting cannot be read at admission, so Pods relying on their ServiceAccount to disable automounting are also reported. Pods that genuinely need a token can be given a PolicyException.
+spec:
+  validationActions: [Audit]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [pods]
+  validations:
+    - expression: "object.spec.?automountServiceAccountToken.orValue(true) == false"
+      message: Set automountServiceAccountToken to false unless the Pod calls the Kubernetes API (CIS 5.1.6).

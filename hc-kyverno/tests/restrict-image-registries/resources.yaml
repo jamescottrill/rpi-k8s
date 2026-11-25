@@ -1,0 +1,86 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hub-short
+  namespace: apps
+spec:
+
+  containers:
+    - name: app
+      image: redis:7
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hub-org
+  namespace: apps
+spec:
+
+  containers:
+    - name: app
+      image: pihole/pihole:2025.01
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ghcr
+  namespace: apps
+spec:
+
+  containers:
+    - name: app
+      image: ghcr.io/org/app:1
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: home
+  namespace: apps
+spec:
+
+  containers:
+    - name: app
+      image: docker.home.dev/app:1
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: untrusted
+  namespace: apps
+spec:
+
+  containers:
+    - name: app
+      image: evil.example.com/app:1
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: untrusted-port
+  namespace: apps
+spec:
+
+  containers:
+    - name: app
+      image: 10.0.0.1:5000/app:1
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: untrusted-init
+  namespace: apps
+spec:
+  initContainers:
+    - name: init
+      image: evil.example.com/init:1
+  containers:
+    - name: app
+      image: nginx:1
+

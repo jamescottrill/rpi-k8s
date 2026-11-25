@@ -1,0 +1,27 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: restrict-cluster-admin-binding
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    cis.benchmark/controls: "5.1.1"
+    policies.kyverno.io/title: Restrict cluster-admin bindings
+    policies.kyverno.io/category: CIS Benchmark (RBAC)
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      CIS 5.1.1: the cluster-admin role should only be bound where strictly required. Bindings owned by Kubernetes itself (named system:*) are ignored.
+spec:
+  validationActions: [Audit]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [rbac.authorization.k8s.io]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [clusterrolebindings, rolebindings]
+  matchConditions:
+    - name: skip-system-bindings
+      expression: "!object.metadata.name.startsWith('system:')"
+  validations:
+    - expression: "object.roleRef.name != 'cluster-admin'"
+      message: Binding to the cluster-admin role should be replaced with a narrower role (CIS 5.1.1).

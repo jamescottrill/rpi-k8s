@@ -1,0 +1,85 @@
+kyverno:
+  admissionController:
+    replicas: 3
+    nodeAffinity: &avoidControlPlane
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist
+  backgroundController:
+    nodeAffinity: *avoidControlPlane
+  cleanupController:
+    nodeAffinity: *avoidControlPlane
+  reportsController:
+    nodeAffinity: *avoidControlPlane
+
+kyverno-policies:
+  podSecurityStandard: restricted
+  kyvernoVersion: 1.20.0
+  failurePolicy: Fail
+  validationFailureAction: Audit
+  validationFailureActionByPolicy:
+    disallow-capabilities: Enforce
+    disallow-host-namespaces: Enforce
+    disallow-host-path: Enforce
+    disallow-host-ports: Enforce
+    disallow-host-probes: Enforce
+    disallow-host-process: Enforce
+    disallow-privileged-containers: Enforce
+    disallow-proc-mount: Enforce
+    disallow-selinux: Enforce
+    restrict-apparmor-profiles: Enforce
+    restrict-seccomp: Enforce
+    restrict-sysctls: Enforce
+  vpolExcludeByPolicy:
+    disallow-capabilities:
+      excludeNamespaces:
+        - longhorn-system
+        - metallb
+    disallow-host-namespaces:
+      excludeNamespaces:
+        - homebridge
+        - metallb
+        - monitoring
+    disallow-host-ports:
+      excludeNamespaces:
+        - homebridge
+        - metallb
+        - monitoring
+    disallow-host-path:
+      excludeNamespaces:
+        - longhorn-system
+        - monitoring
+    disallow-privileged-containers:
+      excludeNamespaces:
+        - longhorn-system
+        - tailscale
+  customAnnotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+  customAnnotationsByPolicy:
+    disallow-privileged-containers:
+      cis.benchmark/controls: "5.2.2"
+    disallow-host-namespaces:
+      cis.benchmark/controls: "5.2.3,5.2.4,5.2.5"
+    disallow-privilege-escalation:
+      cis.benchmark/controls: "5.2.6"
+    require-run-as-nonroot:
+      cis.benchmark/controls: "5.2.7"
+    require-run-as-non-root-user:
+      cis.benchmark/controls: "5.2.7"
+    disallow-capabilities:
+      cis.benchmark/controls: "5.2.9"
+    disallow-capabilities-strict:
+      cis.benchmark/controls: "5.2.8,5.2.9,5.2.10"
+    disallow-host-process:
+      cis.benchmark/controls: "5.2.11"
+    disallow-host-path:
+      cis.benchmark/controls: "5.2.12"
+    disallow-host-ports:
+      cis.benchmark/controls: "5.2.13"
+    restrict-seccomp:
+      cis.benchmark/controls: "5.7.2"
+    restrict-seccomp-strict:
+      cis.benchmark/controls: "5.7.2"

@@ -1,0 +1,45 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: plain-env
+  namespace: apps
+spec:
+
+  containers:
+    - name: app
+      image: nginx:1
+      env:
+        - name: A
+          value: b
+        - name: B
+          valueFrom:
+            configMapKeyRef: {name: cm, key: k}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secret-key-ref
+  namespace: apps
+spec:
+
+  containers:
+    - name: app
+      image: nginx:1
+      env:
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef: {name: s, key: k}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secret-env-from
+  namespace: apps
+spec:
+
+  containers:
+    - name: app
+      image: nginx:1
+      envFrom:
+        - secretRef: {name: s}

@@ -1,0 +1,27 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: restrict-default-sa-automount
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    cis.benchmark/controls: "5.1.5"
+    policies.kyverno.io/title: Stop the default ServiceAccount mounting tokens
+    policies.kyverno.io/category: CIS Benchmark (RBAC)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      CIS 5.1.5: every namespace's default ServiceAccount should set automountServiceAccountToken to false so that workloads which forget to name a ServiceAccount do not receive API credentials.
+spec:
+  validationActions: [Audit]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [serviceaccounts]
+  matchConditions:
+    - name: default-only
+      expression: "object.metadata.name == 'default'"
+  validations:
+    - expression: "object.?automountServiceAccountToken.orValue(true) == false"
+      message: The default ServiceAccount should set automountServiceAccountToken to false (CIS 5.1.5).
