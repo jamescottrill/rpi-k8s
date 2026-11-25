@@ -1,0 +1,56 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: rbac
+policies:
+  - ../../templates/policies/restrict-cluster-admin-binding.yaml
+  - ../../templates/policies/restrict-wildcard-rbac.yaml
+  - ../../templates/policies/restrict-rbac-escalation-verbs.yaml
+  - ../../templates/policies/restrict-default-sa-automount.yaml
+resources:
+  - resources.yaml
+results:
+  - policy: restrict-cluster-admin-binding
+    kind: ClusterRoleBinding
+    resources: [app-view]
+    result: pass
+  - policy: restrict-cluster-admin-binding
+    kind: ClusterRoleBinding
+    resources: [app-cluster-admin]
+    result: fail
+  - policy: restrict-cluster-admin-binding
+    kind: ClusterRoleBinding
+    resources: ["system:cluster-admin-copy"]
+    result: skip
+  - policy: restrict-wildcard-rbac
+    kind: ClusterRole
+    resources: [narrow, impersonator]
+    result: pass
+  - policy: restrict-wildcard-rbac
+    kind: ClusterRole
+    resources: [wildcard-verbs]
+    result: fail
+  - policy: restrict-wildcard-rbac
+    kind: Role
+    resources: [apps/wildcard-resources]
+    result: fail
+  - policy: restrict-wildcard-rbac
+    kind: ClusterRole
+    resources: ["system:controller:wildcard"]
+    result: skip
+  - policy: restrict-rbac-escalation-verbs
+    kind: ClusterRole
+    resources: [narrow, wildcard-verbs]
+    result: pass
+  - policy: restrict-rbac-escalation-verbs
+    kind: ClusterRole
+    resources: [impersonator]
+    result: fail
+  - policy: restrict-default-sa-automount
+    kind: ServiceAccount
+    resources: [locked/default]
+    result: pass
+  - policy: restrict-default-sa-automount
+    kind: ServiceAccount
+    resources: [open/default]
+    result: fail

@@ -1,0 +1,24 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: disallow-default-namespace
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    cis.benchmark/controls: "5.7.4"
+    policies.kyverno.io/title: Disallow workloads in the default namespace
+    policies.kyverno.io/category: CIS Benchmark (General)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      CIS 5.7.4: workloads should live in their own namespace so that RBAC, network policy and resource quotas can be scoped to them.
+spec:
+  validationActions: [Audit]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [pods]
+  validations:
+    - expression: "object.metadata.?namespace.orValue('') != 'default'"
+      message: Run workloads in a dedicated namespace rather than default (CIS 5.7.4).

@@ -1,0 +1,31 @@
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: restrict-rbac-escalation-verbs
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    cis.benchmark/controls: "5.1.8"
+    policies.kyverno.io/title: Restrict bind, escalate and impersonate
+    policies.kyverno.io/category: CIS Benchmark (RBAC)
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      CIS 5.1.8: the bind, escalate and impersonate verbs let a subject gain more privilege than it was granted, so they should be granted sparingly. Kubernetes-owned roles (system:*) and the built-in cluster-admin role are ignored.
+spec:
+  validationActions: [Audit]
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [rbac.authorization.k8s.io]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [clusterroles, roles]
+  matchConditions:
+    - name: skip-system-roles
+      expression: "!object.metadata.name.startsWith('system:')"
+    - name: skip-cluster-admin
+      expression: "object.metadata.name != 'cluster-admin'"
+  validations:
+    - expression: >-
+        object.?rules.orValue([]).all(r,
+          !r.verbs.exists(v, v in ['bind', 'escalate', 'impersonate']))
+      message: The bind, escalate and impersonate verbs should not be granted (CIS 5.1.8).

@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: complete
+  namespace: apps
+spec:
+
+  containers:
+    - name: app
+      image: nginx:1
+      resources:
+        requests: {cpu: 10m, memory: 16Mi}
+        limits: {memory: 32Mi}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: no-resources
+  namespace: apps
+spec:
+
+  containers:
+    - name: app
+      image: nginx:1
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: no-limit
+  namespace: apps
+spec:
+
+  containers:
+    - name: app
+      image: nginx:1
+      resources:
+        requests: {cpu: 10m, memory: 16Mi}

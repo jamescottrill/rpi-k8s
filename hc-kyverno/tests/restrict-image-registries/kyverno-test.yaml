@@ -1,0 +1,37 @@
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: restrict-image-registries
+policies:
+  - ../../templates/policies/restrict-image-registries.yaml
+resources:
+  - resources.yaml
+results:
+  - policy: restrict-image-registries
+    kind: Pod
+    resources: [apps/hub-short]
+    result: pass
+  - policy: restrict-image-registries
+    kind: Pod
+    resources: [apps/hub-org]
+    result: pass
+  - policy: restrict-image-registries
+    kind: Pod
+    resources: [apps/ghcr]
+    result: pass
+  - policy: restrict-image-registries
+    kind: Pod
+    resources: [apps/home]
+    result: pass
+  - policy: restrict-image-registries
+    kind: Pod
+    resources: [apps/untrusted]
+    result: fail
+  - policy: restrict-image-registries
+    kind: Pod
+    resources: [apps/untrusted-port]
+    result: fail
+  - policy: restrict-image-registries
+    kind: Pod
+    resources: [apps/untrusted-init]
+    result: fail
